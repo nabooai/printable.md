@@ -55,7 +55,9 @@ const THEMES: {
 ]
 
 export default function Page() {
-  const [markdown, setMarkdown] = useLocalStorage<string>('pp:markdown', '')
+  // Markdown is intentionally NOT persisted — every reload starts with a clean,
+  // blinking-caret page so it's obvious you can paste/type fresh content.
+  const [markdown, setMarkdown] = useState<string>('')
   const [pageSize, setPageSize] = useLocalStorage<PageSize>('pp:pageSize', 'letter')
   const [theme, setTheme] = useLocalStorage<Theme>('pp:theme', 'scientific')
   const [typography, setTypography] = useLocalStorage<TypographySettings>('pp:typo', DEFAULT_TYPOGRAPHY)
@@ -449,6 +451,11 @@ export default function Page() {
               pageSize={pageSize}
               theme={theme}
               typography={typography}
+              onMarkdownChange={(md) => {
+                setMarkdown(md)
+                setPasteFlash(true)
+                setTimeout(() => setPasteFlash(false), 600)
+              }}
             />
           </div>
           <div

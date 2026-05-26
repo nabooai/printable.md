@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
@@ -45,6 +45,7 @@ interface PrintDocumentProps {
   pageSize: PageSize
   theme: Theme
   typography?: TypographySettings
+  onMarkdownChange?: (md: string) => void
 }
 
 // Extract the first leading H1 ("# Title") from the markdown so we can render it
@@ -66,6 +67,7 @@ export function PrintDocument({
   pageSize,
   theme,
   typography = DEFAULT_TYPOGRAPHY,
+  onMarkdownChange,
 }: PrintDocumentProps) {
   const { title, body } = useMemo(() => extractLeadingTitle(markdown), [markdown])
   // Avoid SSR/CSR mismatch: rehype-highlight produces different markup on the
@@ -73,6 +75,43 @@ export function PrintDocument({
   // rendering until after mount.
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
+
+  const editorRef = useRef<HTMLDivElement>(null)
+  const isEmpty = markdown.trim().length === 0
+
+  // Auto-focus the editable area on mount so the caret is blinking and ready.
+  useEffect(() => {
+    if (isEmpty && editorRef.current && mounted) {
+      editorRef.current.focus()
+    }
+  }, [isEmpty, mounted])
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    if (!onMarkdownChange) return
+    const text = e.clipboardData.getData('text/plain')
+    if (!text.trim()) return
+    e.preventDefault()
+    onMarkdownChange(text)
+  }
+
+  const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
+    if (!onMarkdownChange) return
+    // Capture plain text from the contenteditable while user is typing.
+    // We only do this while the document is still empty; once content
+    // exists, the rendered markdown view takes over.
+    const text = (e.currentTarget.innerText ?? '').trim()
+    if (text.length > 0) {
+      onMarkdownChange(e.currentTarget.innerText)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Insert real newlines on Enter (default contenteditable behavior emits <div> / <br> mess).
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      document.execCommand('insertText', false, '\n')
+    }
+  }
 
   const cssVars = {
     '--pp-fs-scale': typography.fontScale,
@@ -84,7 +123,7 @@ export function PrintDocument({
     '--pp-hyphens': typography.hyphenate ? 'auto' : 'manual',
   } as React.CSSProperties
 
-  const isEmpty = markdown.trim().length === 0
+  const isEmptyDup = isEmpty // (already computed above)
 
   return (
     <div className="print-stage" style={cssVars}>
@@ -95,21 +134,18 @@ export function PrintDocument({
       >
         <div className="page-paper__inner">
           {isEmpty ? (
-            <div className="paste-empty">
-              <div className="paste-empty__kbd">
-                <kbd>⌘</kbd>
-                <span>+</span>
-                <kbd>V</kbd>
-                <span className="paste-empty__or">or</span>
-                <kbd>Ctrl</kbd>
-                <span>+</span>
-                <kbd>V</kbd>
-              </div>
-              <div className="paste-empty__title">Paste your markdown</div>
-              <div className="paste-empty__hint">
-                Anywhere on this page. Your LLM report renders here, styled for printing.
-              </div>
-            </div>
+            <div
+              ref={editorRef}
+              className={`paste-editor prose-print prose-print--${theme}`}
+              contentEditable
+              suppressContentEditableWarning
+              spellCheck={false}
+              data-placeholder="Start typing or paste markdown (Cmd/Ctrl+V)…"
+              onPaste={handlePaste}
+              onInput={handleInput}
+              onKeyDown={handleKeyDown}
+              aria-label="Markdown editor"
+            />
           ) : (
             <>
               {title ? (
