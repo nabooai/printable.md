@@ -202,6 +202,168 @@
   background: var(--ink);
 }
 
+/* Magazine */
+.doc-header--magazine .doc-title {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 900;
+  font-size: 3.2rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.doc-header--magazine::after {
+  width: 60px;
+  height: 3px;
+  background: var(--ink);
+}
+
+/* Newspaper */
+.doc-header--newspaper {
+  margin-bottom: 1em;
+}
+.doc-header--newspaper .doc-title {
+  font-family: 'Times New Roman', Times, serif;
+  font-weight: 900;
+  font-size: 2.6rem;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  border-top: 4px double var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding: 0.3em 0;
+}
+.doc-header--newspaper::after {
+  display: none;
+}
+
+/* Hipster */
+.doc-header--hipster .doc-title {
+  font-family: var(--font-bebas), Impact, sans-serif;
+  font-weight: 400;
+  font-size: 3.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.doc-header--hipster::after {
+  content: '✦ ✦ ✦';
+  background: transparent;
+  width: auto;
+  height: auto;
+  letter-spacing: 0.6em;
+  color: var(--ink);
+  margin-top: 0.6em;
+  font-size: 0.9rem;
+}
+
+/* Technical */
+.doc-header--technical {
+  text-align: left;
+}
+.doc-header--technical .doc-title {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+.doc-header--technical::after {
+  margin: 0.8em 0 0;
+  width: 100%;
+  background: var(--ink);
+  height: 2px;
+}
+
+/* Scholarly */
+.doc-header--scholarly .doc-title {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  font-variant: small-caps;
+  letter-spacing: 0.12em;
+  font-size: 2rem;
+}
+.doc-header--scholarly::after {
+  content: '⁂';
+  background: transparent;
+  width: auto;
+  height: auto;
+  font-size: 1.4rem;
+  color: var(--ink);
+  margin-top: 0.4em;
+}
+
+/* Modernist */
+.doc-header--modernist {
+  text-align: left;
+  margin-bottom: 2em;
+}
+.doc-header--modernist .doc-title {
+  font-family: var(--font-inter), 'Helvetica Neue', sans-serif;
+  font-weight: 800;
+  font-size: 2.6rem;
+  letter-spacing: -0.04em;
+  text-transform: lowercase;
+  line-height: 1;
+}
+.doc-header--modernist::after {
+  display: none;
+}
+
+/* Brutalist */
+.doc-header--brutalist {
+  margin-bottom: 1.4em;
+}
+.doc-header--brutalist .doc-title {
+  font-family: var(--font-archivo), Impact, sans-serif;
+  font-weight: 900;
+  font-size: 2.8rem;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.3em 0.4em;
+  display: inline-block;
+}
+.doc-header--brutalist::after {
+  display: none;
+}
+
+/* Zine */
+.doc-header--zine {
+  margin-bottom: 1.6em;
+}
+.doc-header--zine .doc-title {
+  font-family: var(--font-archivo), Impact, sans-serif;
+  font-weight: 900;
+  font-size: 3rem;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+  padding: 0.2em 0.4em;
+  display: inline-block;
+  transform: rotate(-1deg);
+}
+.doc-header--zine::after {
+  content: '✂ - - - - - - - - - - -';
+  background: transparent;
+  width: auto;
+  height: auto;
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  color: var(--ink);
+  margin-top: 0.8em;
+  font-size: 0.85rem;
+}
+
+/* Editorial (already has prose drop cap, give the title a clear identity too) */
+.doc-header--editorial .doc-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 3rem;
+  letter-spacing: -0.02em;
+}
+
 /* ===========================================================
    Base prose (used by all themes)
    =========================================================== */
