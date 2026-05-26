@@ -21,7 +21,7 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Paperpress — Beautiful Markdown to Print',
+  title: 'Nisism Print',
   description: 'Turn plain markdown into a beautifully typeset, printable document.',
   generator: 'v0.app',
 }
