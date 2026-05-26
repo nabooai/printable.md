@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { PrintDocument, type Theme, type PageSize } from '@/components/print-document'
 import { SAMPLE_MARKDOWN } from '@/lib/sample-markdown'
 import { useLocalStorage } from '@/hooks/use-local-storage'
-import { Printer, FileText, Eye, Download, BookOpen, FlaskConical, Type, Minus } from 'lucide-react'
+import { Printer, FileText, Eye, Download, BookOpen, FlaskConical, Type, Minus,
+  Newspaper, Sparkles, Coffee, Code2, GraduationCap, Square, Hash, Scissors } from 'lucide-react'
 
 const THEMES: {
   id: Theme
@@ -14,6 +15,14 @@ const THEMES: {
 }[] = [
   { id: 'scientific', label: 'Scientific', description: 'IEEE-style research paper', icon: FlaskConical },
   { id: 'editorial', label: 'Editorial', description: 'Magazine essay with drop cap', icon: BookOpen },
+  { id: 'magazine', label: 'Magazine', description: 'Glossy display serif', icon: Sparkles },
+  { id: 'newspaper', label: 'Newspaper', description: 'Condensed broadsheet', icon: Newspaper },
+  { id: 'hipster', label: 'Hipster', description: 'Mixed type, kraft paper', icon: Coffee },
+  { id: 'technical', label: 'Technical', description: 'Spec / API documentation', icon: Code2 },
+  { id: 'scholarly', label: 'Scholarly', description: 'Classical book, small caps', icon: GraduationCap },
+  { id: 'modernist', label: 'Modernist', description: 'Swiss grid, sans-serif', icon: Square },
+  { id: 'brutalist', label: 'Brutalist', description: 'Hard black, raw', icon: Hash },
+  { id: 'zine', label: 'Zine', description: 'Photocopy punk', icon: Scissors },
   { id: 'manuscript', label: 'Manuscript', description: 'Typewritten, double-spaced', icon: Type },
   { id: 'minimal', label: 'Minimal', description: 'Clean sans-serif', icon: Minus },
 ]

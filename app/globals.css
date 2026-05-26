@@ -331,6 +331,641 @@
 }
 
 /* ===========================================================
+   Theme: Magazine (glossy display serif, contrast)
+   =========================================================== */
+.prose-print--magazine {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 11pt;
+  line-height: 1.6;
+}
+.prose-print--magazine h1 {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 900;
+  font-size: 3rem;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  text-align: center;
+  margin: 0.6em 0 0.4em;
+}
+.prose-print--magazine h2 {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 800;
+  font-size: 1.9rem;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 1.4em 0 0.4em;
+}
+.prose-print--magazine h3 {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 700;
+  font-style: italic;
+  font-size: 1.35rem;
+  margin: 1.2em 0 0.3em;
+}
+.prose-print--magazine h4 {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 1em 0 0.25em;
+}
+.prose-print--magazine p {
+  margin: 0 0 0.8em;
+  text-align: justify;
+}
+.prose-print--magazine > h1:first-child + p::first-letter {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-weight: 900;
+  font-size: 4.5em;
+  float: left;
+  line-height: 0.85;
+  padding: 0.05em 0.1em 0 0;
+  color: var(--ink);
+}
+.prose-print--magazine blockquote {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-style: italic;
+  font-size: 1.4rem;
+  line-height: 1.3;
+  text-align: center;
+  margin: 1.5em 2em;
+  padding: 0.5em 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+  color: var(--ink);
+}
+.prose-print--magazine blockquote p {
+  margin: 0;
+  text-align: center;
+}
+
+/* ===========================================================
+   Theme: Newspaper (condensed broadsheet, multi-column-ish)
+   =========================================================== */
+.prose-print--newspaper {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 9.5pt;
+  line-height: 1.35;
+  text-align: justify;
+  hyphens: auto;
+}
+.prose-print--newspaper h1 {
+  font-family: 'Times New Roman', Times, serif;
+  font-weight: 900;
+  font-size: 2.4rem;
+  line-height: 1;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  border-top: 4px double var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding: 0.4em 0;
+  margin: 0 0 0.5em;
+}
+.prose-print--newspaper h2 {
+  font-family: 'Times New Roman', Times, serif;
+  font-weight: 900;
+  font-size: 1.4rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  margin: 1.4em 0 0.3em;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 0.15em;
+}
+.prose-print--newspaper h3 {
+  font-family: 'Times New Roman', Times, serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 1.1em 0 0.2em;
+}
+.prose-print--newspaper h4 {
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-style: italic;
+  margin: 0.9em 0 0.15em;
+}
+.prose-print--newspaper p {
+  margin: 0 0 0.4em;
+}
+.prose-print--newspaper p + p {
+  text-indent: 1em;
+  margin-top: 0;
+}
+.prose-print--newspaper blockquote {
+  font-style: italic;
+  margin: 0.8em 1em;
+  padding: 0.3em 0.8em;
+  border-left: 3px double var(--ink);
+}
+
+/* ===========================================================
+   Theme: Hipster (mixed type, kraft, eclectic)
+   =========================================================== */
+.prose-print--hipster {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 11pt;
+  line-height: 1.65;
+  font-feature-settings: 'kern', 'liga', 'onum', 'ss01';
+}
+.page-paper--hipster {
+  background: oklch(0.95 0.02 80);
+}
+.prose-print--hipster h1 {
+  font-family: var(--font-bebas), Impact, sans-serif;
+  font-weight: 400;
+  font-size: 3.2rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+  text-transform: uppercase;
+  margin: 0.4em 0 0.2em;
+  line-height: 1;
+}
+.prose-print--hipster h2 {
+  font-family: var(--font-bebas), Impact, sans-serif;
+  font-weight: 400;
+  font-size: 2rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 1.5em 0 0.3em;
+  line-height: 1;
+}
+.prose-print--hipster h3 {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  font-style: italic;
+  font-size: 1.35rem;
+  margin: 1.2em 0 0.3em;
+}
+.prose-print--hipster h4 {
+  font-family: var(--font-bebas), Impact, sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 1em 0 0.2em;
+}
+.prose-print--hipster p {
+  margin: 0 0 0.85em;
+  text-align: left;
+}
+.prose-print--hipster blockquote {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-style: italic;
+  font-size: 1.2rem;
+  text-align: center;
+  margin: 1.5em 0;
+  padding: 0.6em 1em;
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  position: relative;
+}
+.prose-print--hipster blockquote::before {
+  content: '“';
+  font-family: var(--font-playfair), Georgia, serif;
+  font-size: 4em;
+  position: absolute;
+  top: -0.15em;
+  left: 50%;
+  transform: translateX(-50%);
+  background: oklch(0.95 0.02 80);
+  padding: 0 0.2em;
+  line-height: 1;
+  color: var(--ink);
+}
+.prose-print--hipster blockquote p {
+  margin: 0.4em 0 0;
+}
+.prose-print--hipster hr::before {
+  content: '✦ ✦ ✦';
+  letter-spacing: 0.6em;
+}
+.prose-print--hipster code {
+  font-family: var(--font-mono);
+  background: oklch(0.92 0.03 80);
+}
+
+/* ===========================================================
+   Theme: Technical (spec / API doc)
+   =========================================================== */
+.prose-print--technical {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 10pt;
+  line-height: 1.55;
+}
+.prose-print--technical h1 {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 1.9rem;
+  letter-spacing: -0.02em;
+  margin: 0.6em 0 0.3em;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 0.3em;
+}
+.prose-print--technical h2 {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  margin: 1.5em 0 0.4em;
+  padding-left: 0.6em;
+  border-left: 4px solid var(--ink);
+}
+.prose-print--technical h3 {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin: 1.2em 0 0.3em;
+  color: var(--ink);
+}
+.prose-print--technical h3::before {
+  content: '§ ';
+  color: var(--muted-foreground);
+}
+.prose-print--technical h4 {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-foreground);
+  margin: 1em 0 0.2em;
+}
+.prose-print--technical p {
+  margin: 0 0 0.7em;
+}
+.prose-print--technical code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: oklch(0.95 0.005 80);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.05em 0.3em;
+}
+.prose-print--technical pre {
+  background: oklch(0.97 0.005 80);
+  border-left: 3px solid var(--ink);
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+.prose-print--technical blockquote {
+  background: oklch(0.95 0.01 240);
+  border-left: 3px solid oklch(0.5 0.15 240);
+  padding: 0.5em 0.9em;
+  margin: 1em 0;
+  font-size: 0.95em;
+}
+.prose-print--technical blockquote p {
+  margin: 0.2em 0;
+}
+.prose-print--technical table {
+  font-size: 0.88em;
+}
+.prose-print--technical th {
+  background: oklch(0.95 0.005 80);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ===========================================================
+   Theme: Scholarly (classical book, small caps)
+   =========================================================== */
+.prose-print--scholarly {
+  font-family: var(--font-fraunces), 'EB Garamond', Georgia, serif;
+  font-size: 11pt;
+  line-height: 1.55;
+  text-align: justify;
+  font-feature-settings: 'kern', 'liga', 'onum', 'smcp';
+}
+.prose-print--scholarly h1 {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  font-variant: small-caps;
+  letter-spacing: 0.1em;
+  font-size: 1.6rem;
+  text-align: center;
+  margin: 0.8em 0 0.4em;
+}
+.prose-print--scholarly h2 {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 600;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  font-size: 1.15rem;
+  text-align: center;
+  margin: 1.6em 0 0.5em;
+}
+.prose-print--scholarly h3 {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-weight: 500;
+  font-style: italic;
+  font-size: 1.05rem;
+  margin: 1.2em 0 0.3em;
+  text-align: center;
+}
+.prose-print--scholarly h4 {
+  font-weight: 600;
+  font-size: 0.98rem;
+  font-style: italic;
+  margin: 1em 0 0.2em;
+}
+.prose-print--scholarly p {
+  margin: 0;
+  text-align: justify;
+}
+.prose-print--scholarly p + p {
+  text-indent: 1.4em;
+}
+.prose-print--scholarly h1 + p,
+.prose-print--scholarly h2 + p,
+.prose-print--scholarly h3 + p,
+.prose-print--scholarly h4 + p,
+.prose-print--scholarly blockquote + p,
+.prose-print--scholarly ul + p,
+.prose-print--scholarly ol + p {
+  text-indent: 0;
+}
+.prose-print--scholarly > h1:first-child + p::first-line {
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+}
+.prose-print--scholarly blockquote {
+  font-size: 0.95em;
+  margin: 1em 1.6em;
+  padding: 0;
+  border: none;
+  font-style: italic;
+}
+.prose-print--scholarly blockquote p {
+  text-indent: 0;
+}
+.prose-print--scholarly hr::before {
+  content: '⁂';
+  letter-spacing: 0;
+  font-size: 1.4em;
+}
+
+/* ===========================================================
+   Theme: Modernist (Swiss grid, Helvetica, tight)
+   =========================================================== */
+.prose-print--modernist {
+  font-family: var(--font-inter), 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 10pt;
+  line-height: 1.5;
+  text-align: left;
+}
+.prose-print--modernist h1 {
+  font-family: var(--font-inter), 'Helvetica Neue', sans-serif;
+  font-weight: 800;
+  font-size: 2.2rem;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  text-transform: lowercase;
+  margin: 0.4em 0 1em;
+}
+.prose-print--modernist h2 {
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 1.6em 0 0.3em;
+}
+.prose-print--modernist h3 {
+  font-family: var(--font-inter), sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-foreground);
+  margin: 1.2em 0 0.3em;
+}
+.prose-print--modernist h4 {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin: 1em 0 0.2em;
+}
+.prose-print--modernist p {
+  margin: 0 0 0.7em;
+  max-width: 60ch;
+}
+.prose-print--modernist blockquote {
+  margin: 1em 0;
+  padding-left: 1em;
+  border-left: 2px solid var(--ink);
+  font-size: 1.05em;
+}
+.prose-print--modernist hr {
+  border-top: 1px solid var(--ink);
+  margin: 1.5em 0;
+}
+.prose-print--modernist hr::before {
+  content: '';
+}
+.prose-print--modernist table {
+  border-top: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+}
+.prose-print--modernist th {
+  border-bottom: 1px solid var(--ink);
+  text-transform: uppercase;
+  font-size: 0.85em;
+  letter-spacing: 0.04em;
+}
+
+/* ===========================================================
+   Theme: Brutalist (raw, hard black, monospaced headers)
+   =========================================================== */
+.prose-print--brutalist {
+  font-family: var(--font-space), 'Courier New', monospace;
+  font-size: 10.5pt;
+  line-height: 1.5;
+}
+.prose-print--brutalist h1 {
+  font-family: var(--font-archivo), Impact, sans-serif;
+  font-weight: 900;
+  font-size: 2.6rem;
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.3em 0.4em;
+  margin: 0 0 0.6em;
+}
+.prose-print--brutalist h2 {
+  font-family: var(--font-archivo), Impact, sans-serif;
+  font-weight: 900;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  margin: 1.4em 0 0.3em;
+  border-top: 3px solid var(--ink);
+  border-bottom: 3px solid var(--ink);
+  padding: 0.2em 0;
+}
+.prose-print--brutalist h3 {
+  font-family: var(--font-archivo), Impact, sans-serif;
+  font-weight: 900;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  margin: 1em 0 0.2em;
+}
+.prose-print--brutalist h3::before {
+  content: '▌ ';
+}
+.prose-print--brutalist h4 {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  margin: 0.9em 0 0.2em;
+}
+.prose-print--brutalist p {
+  margin: 0 0 0.8em;
+}
+.prose-print--brutalist blockquote {
+  margin: 1em 0;
+  padding: 0.6em 0.9em;
+  border: 3px solid var(--ink);
+  background: var(--paper);
+  font-family: var(--font-archivo), Impact, sans-serif;
+  font-size: 1.1em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+.prose-print--brutalist blockquote p {
+  margin: 0;
+}
+.prose-print--brutalist code {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 0;
+}
+.prose-print--brutalist pre {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 0;
+}
+.prose-print--brutalist pre code {
+  color: var(--paper);
+}
+.prose-print--brutalist table {
+  border: 3px solid var(--ink);
+}
+.prose-print--brutalist th {
+  background: var(--ink);
+  color: var(--paper);
+  text-transform: uppercase;
+}
+.prose-print--brutalist td {
+  border-bottom: 1px solid var(--ink);
+}
+.prose-print--brutalist hr {
+  border: none;
+  border-top: 6px solid var(--ink);
+  margin: 1.5em 0;
+}
+.prose-print--brutalist hr::before {
+  content: '';
+}
+
+/* ===========================================================
+   Theme: Zine (photocopy punk, rotated headings, kraft)
+   =========================================================== */
+.prose-print--zine {
+  font-family: var(--font-mono), 'Courier New', monospace;
+  font-size: 10.5pt;
+  line-height: 1.55;
+}
+.page-paper--zine {
+  background: oklch(0.96 0.012 90);
+}
+.prose-print--zine h1 {
+  font-family: var(--font-archivo), Impact, sans-serif;
+  font-weight: 900;
+  font-size: 2.8rem;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+  text-align: center;
+  margin: 0.4em 0 0.4em;
+  text-shadow: 3px 3px 0 var(--paper), 3px 3px 0 1px var(--ink);
+  outline: 3px solid var(--ink);
+  outline-offset: 4px;
+  padding: 0.2em 0.4em;
+  display: inline-block;
+  transform: rotate(-1deg);
+  width: auto;
+}
+.prose-print--zine h2 {
+  font-family: var(--font-archivo), Impact, sans-serif;
+  font-weight: 900;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 1.5em 0 0.4em;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.15em 0.4em;
+  display: inline-block;
+  transform: rotate(0.5deg);
+}
+.prose-print--zine h3 {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 1.2em 0 0.3em;
+  border-bottom: 2px dashed var(--ink);
+  padding-bottom: 0.15em;
+}
+.prose-print--zine h4 {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  margin: 1em 0 0.2em;
+}
+.prose-print--zine h4::before {
+  content: '>> ';
+}
+.prose-print--zine p {
+  margin: 0 0 0.8em;
+}
+.prose-print--zine blockquote {
+  margin: 1em 0;
+  padding: 0.6em 1em;
+  border: 2px dashed var(--ink);
+  background: oklch(0.92 0.02 90);
+  font-family: var(--font-archivo), Impact, sans-serif;
+  font-size: 1.15em;
+  text-transform: uppercase;
+  line-height: 1.25;
+}
+.prose-print--zine blockquote p {
+  margin: 0;
+}
+.prose-print--zine ul li::marker {
+  content: '✶ ';
+}
+.prose-print--zine hr::before {
+  content: '✂ - - - - - - - - - - - - -';
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+}
+.prose-print--zine code {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: 0;
+  padding: 0.05em 0.3em;
+}
+
+/* ===========================================================
    Theme: Editorial (default — magazine essay feel)
    =========================================================== */
 .prose-print--editorial {

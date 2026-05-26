@@ -5,7 +5,19 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
 
-export type Theme = 'editorial' | 'scientific' | 'manuscript' | 'minimal'
+export type Theme =
+  | 'editorial'
+  | 'scientific'
+  | 'manuscript'
+  | 'minimal'
+  | 'magazine'
+  | 'newspaper'
+  | 'hipster'
+  | 'technical'
+  | 'scholarly'
+  | 'modernist'
+  | 'brutalist'
+  | 'zine'
 export type PageSize = 'letter' | 'a4'
 
 interface PrintDocumentProps {
