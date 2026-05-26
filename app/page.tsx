@@ -24,6 +24,7 @@ export default function Page() {
   const [pageSize, setPageSize] = useLocalStorage<PageSize>('pp:pageSize', 'letter')
   const [theme, setTheme] = useLocalStorage<Theme>('pp:theme', 'scientific')
   const [showMeta, setShowMeta] = useLocalStorage<boolean>('pp:showMeta', true)
+  const [showPageNumbers, setShowPageNumbers] = useLocalStorage<boolean>('pp:showPageNumbers', true)
   const [showEditor, setShowEditor] = useState(true)
   const [pageCount, setPageCount] = useState(1)
 
@@ -239,6 +240,17 @@ export default function Page() {
                     Title block
                   </span>
                 </label>
+                <label className="flex items-end gap-2 pb-2">
+                  <input
+                    type="checkbox"
+                    checked={showPageNumbers}
+                    onChange={(e) => setShowPageNumbers(e.target.checked)}
+                    className="h-4 w-4 rounded"
+                  />
+                  <span className="text-sm" style={{ color: 'var(--ink)' }}>
+                    Page numbers
+                  </span>
+                </label>
               </div>
 
               {/* Editor */}
@@ -285,6 +297,7 @@ export default function Page() {
               pageSize={pageSize}
               theme={theme}
               showMeta={showMeta}
+              showPageNumbers={showPageNumbers}
               onPageCount={setPageCount}
             />
           </div>

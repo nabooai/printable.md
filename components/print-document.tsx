@@ -17,6 +17,7 @@ interface PrintDocumentProps {
   pageSize: PageSize
   theme: Theme
   showMeta: boolean
+  showPageNumbers?: boolean
   onPageCount?: (n: number) => void
 }
 
@@ -34,6 +35,7 @@ export function PrintDocument({
   pageSize,
   theme,
   showMeta,
+  showPageNumbers = true,
   onPageCount,
 }: PrintDocumentProps) {
   const sourceRef = useRef<HTMLDivElement>(null)
@@ -230,14 +232,21 @@ export function PrintDocument({
     // Fill page footers
     const sheets = Array.from(container.children) as HTMLElement[]
     sheets.forEach((s, i) => {
-      const footer = s.querySelector('.page-footer')
-      if (footer) footer.textContent = `${i + 1} / ${total}`
+      const footer = s.querySelector('.page-footer') as HTMLElement | null
+      if (!footer) return
+      if (showPageNumbers) {
+        footer.textContent = `${i + 1} / ${total}`
+        footer.style.display = ''
+      } else {
+        footer.textContent = ''
+        footer.style.display = 'none'
+      }
     })
 
     setPageCount(total)
     onPageCount?.(total)
     setReady(true)
-  }, [html, pageSize, theme, showMeta, title, author, affiliation, today, onPageCount])
+  }, [html, pageSize, theme, showMeta, showPageNumbers, title, author, affiliation, today, onPageCount])
 
   // Re-paginate when fonts finish loading (heights shift after webfonts swap in)
   useEffect(() => {
