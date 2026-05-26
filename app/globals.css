@@ -1539,11 +1539,44 @@
   --pp-hyphens: auto;
 }
 
-/* Font scale: use `zoom` on the inner content area so that rem-based
-   heading sizes inside themes scale together with body text. The .page-paper
-   itself stays at the true sheet size. */
+/* Font scale: set the base font-size on the inner content area, and override
+   all heading + special block sizes in `em` so they scale together with body
+   text. Theme rules use `rem` (root-relative) which the slider can't affect,
+   so we re-declare here with !important. */
 .print-stage .page-paper__inner {
-  zoom: var(--pp-fs-scale);
+  font-size: calc(11pt * var(--pp-fs-scale));
+}
+.print-stage .prose-print {
+  font-size: 1em !important;
+}
+.print-stage .prose-print h1 {
+  font-size: 2.4em !important;
+}
+.print-stage .prose-print h2 {
+  font-size: 1.6em !important;
+}
+.print-stage .prose-print h3 {
+  font-size: 1.25em !important;
+}
+.print-stage .prose-print h4 {
+  font-size: 1.05em !important;
+}
+.print-stage .prose-print h5,
+.print-stage .prose-print h6 {
+  font-size: 0.95em !important;
+}
+.print-stage .prose-print pre,
+.print-stage .prose-print pre code {
+  font-size: 0.85em !important;
+}
+.print-stage .prose-print code {
+  font-size: 0.88em !important;
+}
+.print-stage .prose-print blockquote {
+  font-size: 1em !important;
+}
+.print-stage .doc-title {
+  font-size: 2.6em !important;
 }
 
 /* Line-height, letter-spacing, alignment, hyphens — apply to body text
