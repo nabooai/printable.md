@@ -1523,3 +1523,56 @@
     break-inside: avoid;
   }
 }
+
+/* ===========================================================
+   User typography knobs — applied last so they override theme defaults.
+   These read CSS variables set by <PrintDocument> on .print-stage.
+   =========================================================== */
+.print-stage {
+  /* fallbacks if no inline vars are provided */
+  --pp-fs-scale: 1;
+  --pp-line-height: 1.6;
+  --pp-para-spacing: 1;
+  --pp-letter-spacing: 0em;
+  --pp-page-margin: 1;
+  --pp-text-align: justify;
+  --pp-hyphens: auto;
+}
+
+.print-stage .prose-print {
+  font-size: calc(11pt * var(--pp-fs-scale));
+  line-height: var(--pp-line-height);
+  letter-spacing: var(--pp-letter-spacing);
+  text-align: var(--pp-text-align);
+  hyphens: var(--pp-hyphens);
+  -webkit-hyphens: var(--pp-hyphens);
+}
+
+.print-stage .prose-print p,
+.print-stage .prose-print ul,
+.print-stage .prose-print ol,
+.print-stage .prose-print blockquote,
+.print-stage .prose-print pre,
+.print-stage .prose-print table,
+.print-stage .prose-print figure {
+  margin-bottom: calc(0.85em * var(--pp-para-spacing));
+}
+
+/* Page margin multiplier */
+.print-stage .page-paper {
+  padding: calc(0.85in * var(--pp-page-margin)) calc(0.95in * var(--pp-page-margin));
+}
+.print-stage .page-paper[data-size='a4'] {
+  padding: calc(22mm * var(--pp-page-margin)) calc(24mm * var(--pp-page-margin));
+}
+
+/* Title block scales too */
+.print-stage .doc-title {
+  font-size: calc(2.4rem * var(--pp-fs-scale));
+}
+
+@media print {
+  @page {
+    margin: calc(0.85in * var(--pp-page-margin)) calc(0.95in * var(--pp-page-margin));
+  }
+}

@@ -1,11 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { PrintDocument, type Theme, type PageSize } from '@/components/print-document'
+import {
+  PrintDocument,
+  type Theme,
+  type PageSize,
+  type TypographySettings,
+  DEFAULT_TYPOGRAPHY,
+} from '@/components/print-document'
 import { SAMPLE_MARKDOWN } from '@/lib/sample-markdown'
 import { useLocalStorage } from '@/hooks/use-local-storage'
 import { Printer, FileText, Eye, Download, BookOpen, FlaskConical, Type, Minus,
-  Newspaper, Sparkles, Coffee, Code2, GraduationCap, Square, Hash, Scissors } from 'lucide-react'
+  Newspaper, Sparkles, Coffee, Code2, GraduationCap, Square, Hash, Scissors,
+  RotateCcw, Sliders } from 'lucide-react'
 
 const THEMES: {
   id: Theme
@@ -31,7 +38,13 @@ export default function Page() {
   const [markdown, setMarkdown] = useLocalStorage<string>('pp:markdown', SAMPLE_MARKDOWN)
   const [pageSize, setPageSize] = useLocalStorage<PageSize>('pp:pageSize', 'letter')
   const [theme, setTheme] = useLocalStorage<Theme>('pp:theme', 'scientific')
+  const [typography, setTypography] = useLocalStorage<TypographySettings>('pp:typo', DEFAULT_TYPOGRAPHY)
   const [showEditor, setShowEditor] = useState(true)
+
+  const updateTypo = <K extends keyof TypographySettings>(key: K, value: TypographySettings[K]) => {
+    setTypography({ ...typography, [key]: value })
+  }
+  const resetTypo = () => setTypography(DEFAULT_TYPOGRAPHY)
 
   // Update document.title from first heading so the printed page title reflects the doc
   useEffect(() => {
@@ -195,6 +208,94 @@ export default function Page() {
                 </p>
               </div>
 
+              {/* Typography knobs */}
+              <div className="border-b p-4" style={{ borderColor: 'var(--border)' }}>
+                <div className="mb-3 flex items-center justify-between">
+                  <div
+                    className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide"
+                    style={{ color: 'var(--muted-foreground)' }}
+                  >
+                    <Sliders className="h-3.5 w-3.5" />
+                    Typography
+                  </div>
+                  <button
+                    onClick={resetTypo}
+                    className="flex items-center gap-1 text-xs hover:underline"
+                    style={{ color: 'var(--muted-foreground)' }}
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    Reset
+                  </button>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Slider
+                    label="Text size"
+                    value={typography.fontScale}
+                    min={0.75}
+                    max={1.4}
+                    step={0.05}
+                    display={`${Math.round(typography.fontScale * 100)}%`}
+                    onChange={(v) => updateTypo('fontScale', v)}
+                  />
+                  <Slider
+                    label="Line height"
+                    value={typography.lineHeight}
+                    min={1.2}
+                    max={2.2}
+                    step={0.05}
+                    display={typography.lineHeight.toFixed(2)}
+                    onChange={(v) => updateTypo('lineHeight', v)}
+                  />
+                  <Slider
+                    label="Paragraph spacing"
+                    value={typography.paragraphSpacing}
+                    min={0.5}
+                    max={2}
+                    step={0.05}
+                    display={`${Math.round(typography.paragraphSpacing * 100)}%`}
+                    onChange={(v) => updateTypo('paragraphSpacing', v)}
+                  />
+                  <Slider
+                    label="Letter spacing"
+                    value={typography.letterSpacing}
+                    min={-0.04}
+                    max={0.08}
+                    step={0.005}
+                    display={`${(typography.letterSpacing * 1000).toFixed(0)}`}
+                    onChange={(v) => updateTypo('letterSpacing', v)}
+                  />
+                  <Slider
+                    label="Page margin"
+                    value={typography.pageMargin}
+                    min={0.6}
+                    max={1.4}
+                    step={0.05}
+                    display={`${Math.round(typography.pageMargin * 100)}%`}
+                    onChange={(v) => updateTypo('pageMargin', v)}
+                  />
+                  <div className="flex flex-wrap gap-3 pt-1">
+                    <label className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--ink)' }}>
+                      <input
+                        type="checkbox"
+                        checked={typography.justify}
+                        onChange={(e) => updateTypo('justify', e.target.checked)}
+                        className="h-3.5 w-3.5"
+                      />
+                      Justify
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--ink)' }}>
+                      <input
+                        type="checkbox"
+                        checked={typography.hyphenate}
+                        onChange={(e) => updateTypo('hyphenate', e.target.checked)}
+                        className="h-3.5 w-3.5"
+                      />
+                      Hyphenate
+                    </label>
+                  </div>
+                </div>
+              </div>
+
               {/* Editor */}
               <div className="flex flex-1 flex-col overflow-hidden">
                 <div
@@ -228,7 +329,12 @@ export default function Page() {
             <span>{pageSize === 'letter' ? '8.5 × 11 in' : '210 × 297 mm'}</span>
           </div>
           <div id="print-root">
-            <PrintDocument markdown={markdown} pageSize={pageSize} theme={theme} />
+            <PrintDocument
+              markdown={markdown}
+              pageSize={pageSize}
+              theme={theme}
+              typography={typography}
+            />
           </div>
           <div
             className="no-print mt-6 text-center text-xs italic"
@@ -239,5 +345,44 @@ export default function Page() {
         </section>
       </div>
     </main>
+  )
+}
+
+function Slider({
+  label,
+  value,
+  min,
+  max,
+  step,
+  display,
+  onChange,
+}: {
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  display: string
+  onChange: (v: number) => void
+}) {
+  return (
+    <label className="flex flex-col gap-1">
+      <div className="flex items-center justify-between text-xs" style={{ color: 'var(--ink)' }}>
+        <span>{label}</span>
+        <span className="font-mono tabular-nums" style={{ color: 'var(--muted-foreground)' }}>
+          {display}
+        </span>
+      </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="h-1 w-full cursor-pointer accent-current"
+        style={{ color: 'var(--primary)' }}
+      />
+    </label>
   )
 }

@@ -20,10 +20,31 @@ export type Theme =
   | 'zine'
 export type PageSize = 'letter' | 'a4'
 
+export interface TypographySettings {
+  fontScale: number      // 0.75 — 1.4
+  lineHeight: number     // 1.2 — 2.2
+  paragraphSpacing: number // 0.5 — 2.0
+  letterSpacing: number  // -0.04 — 0.08 em
+  pageMargin: number     // 0.6 — 1.4 (multiplier on theme default)
+  justify: boolean
+  hyphenate: boolean
+}
+
+export const DEFAULT_TYPOGRAPHY: TypographySettings = {
+  fontScale: 1,
+  lineHeight: 1.6,
+  paragraphSpacing: 1,
+  letterSpacing: 0,
+  pageMargin: 1,
+  justify: true,
+  hyphenate: true,
+}
+
 interface PrintDocumentProps {
   markdown: string
   pageSize: PageSize
   theme: Theme
+  typography?: TypographySettings
 }
 
 // Extract the first leading H1 ("# Title") from the markdown so we can render it
@@ -40,7 +61,12 @@ function extractLeadingTitle(md: string): { title: string | null; body: string }
   return { title, body }
 }
 
-export function PrintDocument({ markdown, pageSize, theme }: PrintDocumentProps) {
+export function PrintDocument({
+  markdown,
+  pageSize,
+  theme,
+  typography = DEFAULT_TYPOGRAPHY,
+}: PrintDocumentProps) {
   const { title, body } = useMemo(() => extractLeadingTitle(markdown), [markdown])
   // Avoid SSR/CSR mismatch: rehype-highlight produces different markup on the
   // client than the server snapshot (token vs hljs- classes). Defer markdown
@@ -48,8 +74,18 @@ export function PrintDocument({ markdown, pageSize, theme }: PrintDocumentProps)
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
+  const cssVars = {
+    '--pp-fs-scale': typography.fontScale,
+    '--pp-line-height': typography.lineHeight,
+    '--pp-para-spacing': typography.paragraphSpacing,
+    '--pp-letter-spacing': `${typography.letterSpacing}em`,
+    '--pp-page-margin': typography.pageMargin,
+    '--pp-text-align': typography.justify ? 'justify' : 'left',
+    '--pp-hyphens': typography.hyphenate ? 'auto' : 'manual',
+  } as React.CSSProperties
+
   return (
-    <div className="print-stage">
+    <div className="print-stage" style={cssVars}>
       <article
         className={`page-paper page-paper--${theme}`}
         data-size={pageSize}
