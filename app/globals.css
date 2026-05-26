@@ -86,7 +86,7 @@
 }
 
 /* ===========================================================
-   Page paper — single flowing sheet width with page-break guides
+   Page paper — single flowing sheet with margin-only break ticks
    =========================================================== */
 .page-paper {
   background: var(--paper);
@@ -98,10 +98,6 @@
     0 24px 50px rgba(0, 0, 0, 0.08);
   position: relative;
   border: 1px solid oklch(0.88 0.005 80);
-  /* Page-break guides: a thin dashed rule every page height, drawn via background.
-     Page area = 11in total - 0.85in*2 padding = 9.3in of content; we draw the
-     guide at the bottom of each page boundary measured from the top of the
-     content box (which begins after the top padding). */
 }
 
 .page-paper[data-size='a4'] {
@@ -109,55 +105,45 @@
   padding: 22mm 24mm;
 }
 
-/* The visual page-break overlay. Positioned over the entire paper, with
-   horizontal dashed lines at each page boundary. Hidden during print. */
-.page-paper__inner {
-  position: relative;
-}
-
+/* Approximate page-break tick marks rendered ONLY in the side margins
+   (outside the content area), so they never cross text or code blocks.
+   Implemented as background gradients on left+right margin strips. */
+.page-paper::before,
 .page-paper::after {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 11in; /* first break after one full page */
-  height: 0;
-  border-top: 1px dashed oklch(0.7 0.02 60);
+  top: 0;
+  bottom: 0;
+  width: 0.95in;
   pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(11in - 1px),
+    oklch(0.65 0.03 60) calc(11in - 1px),
+    oklch(0.65 0.03 60) 11in
+  );
+  background-size: 100% 11in;
+  background-repeat: repeat-y;
+  background-position: 0 0;
+  /* mask the very first "tick" which sits at y=0 (top edge of paper) */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 0.4in, black 0.4in);
+          mask-image: linear-gradient(to bottom, transparent 0, transparent 0.4in, black 0.4in);
 }
+.page-paper::before { left: 0; }
+.page-paper::after  { right: 0; }
 
-/* Multiple guides via repeating background — more reliable than ::after stacking.
-   We layer a repeating linear-gradient on the .page-paper background. */
-.page-paper {
-  background-image:
-    linear-gradient(var(--paper), var(--paper)),
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(11in - 1px),
-      oklch(0.78 0.02 60) calc(11in - 1px),
-      oklch(0.78 0.02 60) 11in
-    );
-  background-repeat: no-repeat, repeat-y;
-  background-size: 100% 0.85in, 100% auto; /* mask top padding so first guide doesn't show in margin */
-  background-position: top left, 0 0.85in;
-}
-.page-paper[data-size='a4'] {
-  background-image:
-    linear-gradient(var(--paper), var(--paper)),
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent calc(297mm - 1px),
-      oklch(0.78 0.02 60) calc(297mm - 1px),
-      oklch(0.78 0.02 60) 297mm
-    );
-  background-size: 100% 22mm, 100% auto;
-  background-position: top left, 0 22mm;
-}
-/* Hide the legacy single ::after rule (we use the gradient approach). */
-.page-paper::after {
-  display: none;
+.page-paper[data-size='a4']::before,
+.page-paper[data-size='a4']::after {
+  width: 24mm;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(297mm - 1px),
+    oklch(0.65 0.03 60) calc(297mm - 1px),
+    oklch(0.65 0.03 60) 297mm
+  );
+  background-size: 100% 297mm;
 }
 
 /* ===========================================================
@@ -756,6 +742,7 @@
     background: white !important;
     background-image: none !important;
   }
+  .page-paper::before,
   .page-paper::after {
     display: none !important;
   }
