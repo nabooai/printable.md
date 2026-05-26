@@ -1539,36 +1539,46 @@
   --pp-hyphens: auto;
 }
 
-.print-stage .prose-print {
-  font-size: calc(11pt * var(--pp-fs-scale));
-  line-height: var(--pp-line-height);
-  letter-spacing: var(--pp-letter-spacing);
-  text-align: var(--pp-text-align);
-  hyphens: var(--pp-hyphens);
-  -webkit-hyphens: var(--pp-hyphens);
+/* Font scale: use `zoom` on the inner content area so that rem-based
+   heading sizes inside themes scale together with body text. The .page-paper
+   itself stays at the true sheet size. */
+.print-stage .page-paper__inner {
+  zoom: var(--pp-fs-scale);
 }
 
+/* Line-height, letter-spacing, alignment, hyphens — apply to body text
+   and inheritable elements with enough specificity to win over theme rules. */
+.print-stage .prose-print,
 .print-stage .prose-print p,
-.print-stage .prose-print ul,
-.print-stage .prose-print ol,
-.print-stage .prose-print blockquote,
-.print-stage .prose-print pre,
-.print-stage .prose-print table,
-.print-stage .prose-print figure {
-  margin-bottom: calc(0.85em * var(--pp-para-spacing));
+.print-stage .prose-print li,
+.print-stage .prose-print blockquote {
+  line-height: var(--pp-line-height) !important;
+  letter-spacing: var(--pp-letter-spacing) !important;
+}
+.print-stage .prose-print,
+.print-stage .prose-print p {
+  text-align: var(--pp-text-align) !important;
+  hyphens: var(--pp-hyphens) !important;
+  -webkit-hyphens: var(--pp-hyphens) !important;
 }
 
-/* Page margin multiplier */
+/* Paragraph spacing: scale margin-bottom on block elements. */
+.print-stage .prose-print > p,
+.print-stage .prose-print > ul,
+.print-stage .prose-print > ol,
+.print-stage .prose-print > blockquote,
+.print-stage .prose-print > pre,
+.print-stage .prose-print > table,
+.print-stage .prose-print > figure {
+  margin-bottom: calc(0.85em * var(--pp-para-spacing)) !important;
+}
+
+/* Page margin multiplier — affects both screen preview and printed @page. */
 .print-stage .page-paper {
   padding: calc(0.85in * var(--pp-page-margin)) calc(0.95in * var(--pp-page-margin));
 }
 .print-stage .page-paper[data-size='a4'] {
   padding: calc(22mm * var(--pp-page-margin)) calc(24mm * var(--pp-page-margin));
-}
-
-/* Title block scales too */
-.print-stage .doc-title {
-  font-size: calc(2.4rem * var(--pp-fs-scale));
 }
 
 @media print {
