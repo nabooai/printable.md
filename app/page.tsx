@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   PrintDocument,
   type Theme,
@@ -10,9 +10,29 @@ import {
 } from '@/components/print-document'
 import { SAMPLE_MARKDOWN } from '@/lib/sample-markdown'
 import { useLocalStorage } from '@/hooks/use-local-storage'
-import { Printer, FileText, Eye, Download, BookOpen, FlaskConical, Type, Minus,
-  Newspaper, Sparkles, Coffee, Code2, GraduationCap, Square, Hash, Scissors,
-  RotateCcw, Sliders } from 'lucide-react'
+import {
+  Printer,
+  FileText,
+  Download,
+  BookOpen,
+  FlaskConical,
+  Type,
+  Minus,
+  Newspaper,
+  Sparkles,
+  Coffee,
+  Code2,
+  GraduationCap,
+  Square,
+  Hash,
+  Scissors,
+  RotateCcw,
+  Sliders,
+  ClipboardPaste,
+  Trash2,
+  PanelLeftClose,
+  PanelLeftOpen,
+} from 'lucide-react'
 
 const THEMES: {
   id: Theme
@@ -35,18 +55,48 @@ const THEMES: {
 ]
 
 export default function Page() {
-  const [markdown, setMarkdown] = useLocalStorage<string>('pp:markdown', SAMPLE_MARKDOWN)
+  const [markdown, setMarkdown] = useLocalStorage<string>('pp:markdown', '')
   const [pageSize, setPageSize] = useLocalStorage<PageSize>('pp:pageSize', 'letter')
   const [theme, setTheme] = useLocalStorage<Theme>('pp:theme', 'scientific')
   const [typography, setTypography] = useLocalStorage<TypographySettings>('pp:typo', DEFAULT_TYPOGRAPHY)
-  const [showEditor, setShowEditor] = useState(true)
+  const [showSidebar, setShowSidebar] = useState(true)
+  const [pasteFlash, setPasteFlash] = useState(false)
+  const printRootRef = useRef<HTMLDivElement>(null)
 
   const updateTypo = <K extends keyof TypographySettings>(key: K, value: TypographySettings[K]) => {
     setTypography({ ...typography, [key]: value })
   }
   const resetTypo = () => setTypography(DEFAULT_TYPOGRAPHY)
 
-  // Update document.title from first heading so the printed page title reflects the doc
+  // Global paste — anywhere in the window. We avoid stealing paste from real
+  // text inputs/textareas/contenteditable so the typography sliders' number
+  // inputs etc. still work normally.
+  useEffect(() => {
+    const handler = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement | null
+      if (target) {
+        const tag = target.tagName
+        if (
+          tag === 'INPUT' ||
+          tag === 'TEXTAREA' ||
+          tag === 'SELECT' ||
+          (target as HTMLElement).isContentEditable
+        ) {
+          return
+        }
+      }
+      const text = e.clipboardData?.getData('text/plain') ?? ''
+      if (!text.trim()) return
+      e.preventDefault()
+      setMarkdown(text)
+      setPasteFlash(true)
+      setTimeout(() => setPasteFlash(false), 600)
+    }
+    window.addEventListener('paste', handler)
+    return () => window.removeEventListener('paste', handler)
+  }, [setMarkdown])
+
+  // Update document.title from first heading
   useEffect(() => {
     const firstHeading = markdown.match(/^#\s+(.+?)\s*$/m)?.[1]?.trim()
     document.title = firstHeading ? `${firstHeading} | Nisism Print` : 'Nisism Print'
@@ -68,6 +118,26 @@ export default function Page() {
 
   const handlePrint = () => window.print()
 
+  const handlePasteFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText()
+      if (text.trim()) {
+        setMarkdown(text)
+        setPasteFlash(true)
+        setTimeout(() => setPasteFlash(false), 600)
+      }
+    } catch {
+      alert('Could not read clipboard. Press Ctrl/Cmd+V anywhere on the page instead.')
+    }
+  }
+
+  const handleClear = () => {
+    if (markdown.trim() && !confirm('Clear the document?')) return
+    setMarkdown('')
+  }
+
+  const handleLoadSample = () => setMarkdown(SAMPLE_MARKDOWN)
+
   const handleDownloadMd = () => {
     const blob = new Blob([markdown], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
@@ -78,6 +148,8 @@ export default function Page() {
     a.click()
     URL.revokeObjectURL(url)
   }
+
+  const isEmpty = markdown.trim().length === 0
 
   return (
     <main className="min-h-screen">
@@ -90,6 +162,14 @@ export default function Page() {
       >
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-6 py-3">
           <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setShowSidebar(!showSidebar)}
+              className="flex h-9 w-9 items-center justify-center rounded-md border transition hover:bg-secondary"
+              style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
+              aria-label="Toggle sidebar"
+            >
+              {showSidebar ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+            </button>
             <div
               className="flex h-9 w-9 items-center justify-center rounded-md"
               style={{ background: 'var(--primary)' }}
@@ -98,26 +178,37 @@ export default function Page() {
             </div>
             <div className="leading-tight">
               <div className="font-display text-xl" style={{ color: 'var(--ink)' }}>
-                Paperpress
+                Nisism Print
               </div>
               <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                LLM reports, printed beautifully
+                Paste markdown. Print beautifully.
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowEditor(!showEditor)}
+              onClick={handlePasteFromClipboard}
               className="hidden items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition hover:bg-secondary sm:inline-flex"
               style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
             >
-              <Eye className="h-4 w-4" />
-              {showEditor ? 'Hide editor' : 'Show editor'}
+              <ClipboardPaste className="h-4 w-4" />
+              Paste
             </button>
+            {!isEmpty && (
+              <button
+                onClick={handleClear}
+                className="hidden items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition hover:bg-secondary sm:inline-flex"
+                style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
+              >
+                <Trash2 className="h-4 w-4" />
+                Clear
+              </button>
+            )}
             <button
               onClick={handleDownloadMd}
-              className="hidden items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition hover:bg-secondary sm:inline-flex"
+              disabled={isEmpty}
+              className="hidden items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition hover:bg-secondary disabled:opacity-40 sm:inline-flex"
               style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
             >
               <Download className="h-4 w-4" />
@@ -125,7 +216,8 @@ export default function Page() {
             </button>
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold shadow-sm transition hover:opacity-90"
+              disabled={isEmpty}
+              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold shadow-sm transition hover:opacity-90 disabled:opacity-40"
               style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
             >
               <Printer className="h-4 w-4" />
@@ -137,13 +229,13 @@ export default function Page() {
 
       <div
         className={`mx-auto grid max-w-[1500px] gap-6 px-6 py-6 ${
-          showEditor ? 'lg:grid-cols-[440px_1fr]' : ''
+          showSidebar ? 'lg:grid-cols-[360px_1fr]' : ''
         }`}
       >
-        {showEditor && (
+        {showSidebar && (
           <aside className="no-print lg:sticky lg:top-[88px] lg:h-[calc(100vh-104px)]">
             <div
-              className="flex h-full flex-col rounded-lg border"
+              className="flex h-full flex-col overflow-y-auto rounded-lg border"
               style={{ borderColor: 'var(--border)', background: 'var(--card)' }}
             >
               {/* Theme picker */}
@@ -202,10 +294,6 @@ export default function Page() {
                     <option value="a4">A4 (210 × 297 mm)</option>
                   </select>
                 </label>
-                <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-                  Tip: the first <code className="font-mono">#</code> heading becomes the document title.
-                  Page numbers can be added by your printer dialog.
-                </p>
               </div>
 
               {/* Typography knobs */}
@@ -296,23 +384,46 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* Editor */}
-              <div className="flex flex-1 flex-col overflow-hidden">
+              {/* Document */}
+              <div className="p-4">
                 <div
-                  className="flex items-center justify-between px-4 py-2 text-xs font-medium uppercase tracking-wide"
+                  className="mb-2 text-xs font-medium uppercase tracking-wide"
                   style={{ color: 'var(--muted-foreground)' }}
                 >
-                  <span>Markdown</span>
-                  <span>{markdown.length.toLocaleString()} chars</span>
+                  Document
                 </div>
-                <textarea
-                  value={markdown}
-                  onChange={(e) => setMarkdown(e.target.value)}
-                  spellCheck={false}
-                  className="flex-1 resize-none border-t bg-transparent p-4 font-mono text-[13px] leading-relaxed outline-none"
-                  style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
-                  placeholder="# Paste your LLM-generated report here..."
-                />
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={handlePasteFromClipboard}
+                    className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition hover:bg-secondary"
+                    style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
+                  >
+                    <ClipboardPaste className="h-4 w-4" />
+                    Paste from clipboard
+                  </button>
+                  <button
+                    onClick={handleLoadSample}
+                    className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition hover:bg-secondary"
+                    style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
+                  >
+                    <FileText className="h-4 w-4" />
+                    Load sample
+                  </button>
+                  {!isEmpty && (
+                    <button
+                      onClick={handleClear}
+                      className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition hover:bg-secondary"
+                      style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Clear document
+                    </button>
+                  )}
+                </div>
+                <p className="mt-3 text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+                  Or just press <kbd className="font-mono">Ctrl/Cmd+V</kbd> anywhere on the page.
+                  The first <code className="font-mono">#</code> heading becomes the document title.
+                </p>
               </div>
             </div>
           </aside>
@@ -324,11 +435,15 @@ export default function Page() {
             style={{ color: 'var(--muted-foreground)' }}
           >
             <span className="uppercase tracking-wider">
-              Preview · {THEMES.find((t) => t.id === theme)?.label}
+              {THEMES.find((t) => t.id === theme)?.label}
             </span>
             <span>{pageSize === 'letter' ? '8.5 × 11 in' : '210 × 297 mm'}</span>
           </div>
-          <div id="print-root">
+          <div
+            id="print-root"
+            ref={printRootRef}
+            className={pasteFlash ? 'paste-flash' : ''}
+          >
             <PrintDocument
               markdown={markdown}
               pageSize={pageSize}

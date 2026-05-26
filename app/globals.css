@@ -1619,3 +1619,72 @@
     margin: calc(0.85in * var(--pp-page-margin)) calc(0.95in * var(--pp-page-margin));
   }
 }
+
+/* ===========================================================
+   Paste empty state — shown on the page itself when no markdown.
+   =========================================================== */
+.paste-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100% - 2em);
+  text-align: center;
+  padding: 4em 1em;
+  color: var(--muted-foreground);
+}
+.paste-empty__kbd {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+.paste-empty__kbd kbd {
+  display: inline-block;
+  padding: 0.3em 0.6em;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.paste-empty__or {
+  margin: 0 0.4em;
+  opacity: 0.6;
+}
+.paste-empty__title {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+  margin-bottom: 0.4rem;
+}
+.paste-empty__hint {
+  font-size: 0.95rem;
+  max-width: 32em;
+  line-height: 1.5;
+}
+
+/* Paste flash animation when content is dropped in */
+.paste-flash .page-paper {
+  animation: paste-flash-anim 0.6s ease-out;
+}
+@keyframes paste-flash-anim {
+  0% {
+    box-shadow: 0 0 0 0 var(--primary), 0 0 30px 0 var(--primary);
+  }
+  100% {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 24px rgba(0, 0, 0, 0.06);
+  }
+}
+
+@media print {
+  .paste-empty {
+    display: none;
+  }
+}

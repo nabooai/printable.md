@@ -84,6 +84,8 @@ export function PrintDocument({
     '--pp-hyphens': typography.hyphenate ? 'auto' : 'manual',
   } as React.CSSProperties
 
+  const isEmpty = markdown.trim().length === 0
+
   return (
     <div className="print-stage" style={cssVars}>
       <article
@@ -92,18 +94,38 @@ export function PrintDocument({
         data-theme={theme}
       >
         <div className="page-paper__inner">
-          {title ? (
-            <header className={`doc-header doc-header--${theme}`}>
-              <h1 className="doc-title">{title}</h1>
-            </header>
-          ) : null}
-          <div className={`prose-print prose-print--${theme}`} suppressHydrationWarning>
-            {mounted ? (
-              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-                {body}
-              </ReactMarkdown>
-            ) : null}
-          </div>
+          {isEmpty ? (
+            <div className="paste-empty">
+              <div className="paste-empty__kbd">
+                <kbd>⌘</kbd>
+                <span>+</span>
+                <kbd>V</kbd>
+                <span className="paste-empty__or">or</span>
+                <kbd>Ctrl</kbd>
+                <span>+</span>
+                <kbd>V</kbd>
+              </div>
+              <div className="paste-empty__title">Paste your markdown</div>
+              <div className="paste-empty__hint">
+                Anywhere on this page. Your LLM report renders here, styled for printing.
+              </div>
+            </div>
+          ) : (
+            <>
+              {title ? (
+                <header className={`doc-header doc-header--${theme}`}>
+                  <h1 className="doc-title">{title}</h1>
+                </header>
+              ) : null}
+              <div className={`prose-print prose-print--${theme}`} suppressHydrationWarning>
+                {mounted ? (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                    {body}
+                  </ReactMarkdown>
+                ) : null}
+              </div>
+            </>
+          )}
         </div>
       </article>
     </div>
