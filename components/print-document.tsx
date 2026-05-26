@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import rehypeHighlight from 'rehype-highlight'
@@ -42,6 +42,11 @@ function extractLeadingTitle(md: string): { title: string | null; body: string }
 
 export function PrintDocument({ markdown, pageSize, theme }: PrintDocumentProps) {
   const { title, body } = useMemo(() => extractLeadingTitle(markdown), [markdown])
+  // Avoid SSR/CSR mismatch: rehype-highlight produces different markup on the
+  // client than the server snapshot (token vs hljs- classes). Defer markdown
+  // rendering until after mount.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   return (
     <div className="print-stage">
@@ -56,10 +61,12 @@ export function PrintDocument({ markdown, pageSize, theme }: PrintDocumentProps)
               <h1 className="doc-title">{title}</h1>
             </header>
           ) : null}
-          <div className={`prose-print prose-print--${theme}`}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
-              {body}
-            </ReactMarkdown>
+          <div className={`prose-print prose-print--${theme}`} suppressHydrationWarning>
+            {mounted ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+                {body}
+              </ReactMarkdown>
+            ) : null}
           </div>
         </div>
       </article>
