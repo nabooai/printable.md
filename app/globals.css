@@ -1,0 +1,379 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(0.98 0.005 85);
+  --foreground: oklch(0.2 0.01 60);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.01 60);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.01 60);
+  --primary: oklch(0.45 0.15 35);
+  --primary-foreground: oklch(0.98 0.005 85);
+  --secondary: oklch(0.95 0.01 80);
+  --secondary-foreground: oklch(0.2 0.01 60);
+  --muted: oklch(0.95 0.01 80);
+  --muted-foreground: oklch(0.5 0.02 60);
+  --accent: oklch(0.92 0.02 75);
+  --accent-foreground: oklch(0.2 0.01 60);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.98 0.005 85);
+  --border: oklch(0.88 0.01 70);
+  --input: oklch(0.88 0.01 70);
+  --ring: oklch(0.45 0.15 35);
+  --radius: 0.5rem;
+
+  --paper: oklch(0.99 0.005 85);
+  --ink: oklch(0.18 0.01 60);
+  --rule: oklch(0.85 0.01 60);
+}
+
+@theme inline {
+  --font-sans: var(--font-serif), 'Source Serif 4', Georgia, serif;
+  --font-serif: var(--font-serif), Georgia, serif;
+  --font-mono: var(--font-mono), 'JetBrains Mono', monospace;
+  --font-display: var(--font-display), 'Instrument Serif', Georgia, serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-rule: var(--rule);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* === The printable document === */
+.prose-print {
+  font-family: var(--font-serif);
+  color: var(--ink);
+  font-size: 11pt;
+  line-height: 1.65;
+  hyphens: auto;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'kern', 'liga', 'onum';
+}
+
+.prose-print h1,
+.prose-print h2,
+.prose-print h3,
+.prose-print h4,
+.prose-print h5,
+.prose-print h6 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.prose-print h1 {
+  font-size: 2.6rem;
+  margin: 0 0 0.4em;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.prose-print > h1:first-child {
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.5em;
+  margin-bottom: 1em;
+}
+
+.prose-print h2 {
+  font-size: 1.75rem;
+  margin: 1.6em 0 0.5em;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.25em;
+}
+
+.prose-print h3 {
+  font-size: 1.35rem;
+  margin: 1.4em 0 0.4em;
+  font-style: italic;
+}
+
+.prose-print h4 {
+  font-size: 1.1rem;
+  margin: 1.2em 0 0.3em;
+  font-weight: 600;
+}
+
+.prose-print p {
+  margin: 0 0 1em;
+  text-align: justify;
+  orphans: 3;
+  widows: 3;
+}
+
+.prose-print p + p {
+  text-indent: 1.5em;
+  margin-top: -0.5em;
+}
+
+.prose-print h1 + p,
+.prose-print h2 + p,
+.prose-print h3 + p,
+.prose-print h4 + p,
+.prose-print blockquote + p,
+.prose-print ul + p,
+.prose-print ol + p,
+.prose-print pre + p,
+.prose-print figure + p,
+.prose-print table + p {
+  text-indent: 0;
+  margin-top: 0;
+}
+
+.prose-print a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-decoration-thickness: 0.5px;
+  text-underline-offset: 2px;
+}
+
+.prose-print strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.prose-print em {
+  font-style: italic;
+}
+
+.prose-print blockquote {
+  margin: 1.2em 0;
+  padding: 0.2em 1.4em;
+  border-left: 3px solid var(--primary);
+  color: var(--muted-foreground);
+  font-style: italic;
+  break-inside: avoid;
+}
+
+.prose-print blockquote p {
+  text-indent: 0;
+  text-align: left;
+}
+
+.prose-print ul,
+.prose-print ol {
+  margin: 0 0 1em;
+  padding-left: 1.6em;
+}
+
+.prose-print li {
+  margin: 0.25em 0;
+}
+
+.prose-print li > p {
+  text-indent: 0;
+  margin: 0;
+  text-align: left;
+}
+
+.prose-print hr {
+  border: none;
+  text-align: center;
+  margin: 2em 0;
+  break-after: avoid;
+}
+
+.prose-print hr::before {
+  content: '· · ·';
+  letter-spacing: 0.6em;
+  color: var(--muted-foreground);
+}
+
+.prose-print code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--secondary);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+}
+
+.prose-print pre {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  line-height: 1.5;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1em 1.2em;
+  margin: 1.2em 0;
+  overflow-x: auto;
+  break-inside: avoid;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.prose-print pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+}
+
+.prose-print table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2em 0;
+  font-size: 0.95em;
+  break-inside: avoid;
+}
+
+.prose-print th,
+.prose-print td {
+  text-align: left;
+  padding: 0.5em 0.8em;
+  border-bottom: 1px solid var(--border);
+}
+
+.prose-print th {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.05em;
+  border-bottom: 2px solid var(--ink);
+}
+
+.prose-print img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.2em auto;
+  break-inside: avoid;
+}
+
+/* Drop cap for first paragraph after first H1 */
+.prose-print > h1:first-child + p::first-letter {
+  font-family: var(--font-display);
+  font-size: 3.6em;
+  float: left;
+  line-height: 0.9;
+  padding: 0.05em 0.08em 0 0;
+  color: var(--primary);
+}
+
+/* Syntax highlighting tokens (subtle, print-friendly) */
+.hljs-comment,
+.hljs-quote {
+  color: oklch(0.55 0.02 60);
+  font-style: italic;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in,
+.hljs-name,
+.hljs-tag {
+  color: oklch(0.4 0.15 280);
+}
+.hljs-string,
+.hljs-attr,
+.hljs-template-variable,
+.hljs-addition {
+  color: oklch(0.45 0.13 145);
+}
+.hljs-number,
+.hljs-literal,
+.hljs-symbol {
+  color: oklch(0.5 0.15 35);
+}
+.hljs-title,
+.hljs-section,
+.hljs-attribute {
+  color: oklch(0.4 0.15 250);
+  font-weight: 600;
+}
+.hljs-variable,
+.hljs-link {
+  color: oklch(0.45 0.15 35);
+}
+
+/* === Paper / Page sizing === */
+.page-sheet {
+  background: var(--paper);
+  width: 8.5in;
+  min-height: 11in;
+  padding: 0.85in 0.95in;
+  margin: 0 auto;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08),
+    0 24px 60px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+.page-sheet[data-size='a4'] {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 22mm 24mm;
+}
+
+/* === Print === */
+@media print {
+  @page {
+    size: letter;
+    margin: 0.85in 0.95in;
+  }
+  @page :first {
+    margin-top: 1in;
+  }
+  html,
+  body {
+    background: white !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .page-sheet {
+    width: 100% !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    background: white !important;
+  }
+  .prose-print {
+    font-size: 11pt;
+  }
+  .prose-print a {
+    color: var(--ink);
+  }
+  .prose-print pre,
+  .prose-print blockquote,
+  .prose-print table,
+  .prose-print img,
+  .prose-print figure {
+    break-inside: avoid;
+  }
+}
