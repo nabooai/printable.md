@@ -86,7 +86,7 @@
 }
 
 /* ===========================================================
-   Page paper — single flowing sheet with margin-only break ticks
+   Page paper — single flowing sheet
    =========================================================== */
 .page-paper {
   background: var(--paper);
@@ -104,9 +104,6 @@
   width: 210mm;
   padding: 22mm 24mm;
 }
-
-/* Page-break visualization removed — was unreliable and bled into print.
-   The browser print dialog handles real pagination. */
 
 /* ===========================================================
    Document header (cover/title block)
@@ -296,8 +293,9 @@
   padding: 0.9em 1.1em;
   margin: 1.1em 0;
   break-inside: avoid;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  white-space: pre;
+  overflow-x: auto;
+  max-width: 100%;
 }
 .prose-print pre code {
   background: transparent;
@@ -703,10 +701,6 @@
     border: none !important;
     background: white !important;
     background-image: none !important;
-  }
-  .page-paper::before,
-  .page-paper::after {
-    display: none !important;
   }
   .prose-print a {
     color: var(--ink);
