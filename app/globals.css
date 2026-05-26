@@ -4,13 +4,13 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(0.98 0.005 85);
+  --background: oklch(0.97 0.005 85);
   --foreground: oklch(0.2 0.01 60);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.2 0.01 60);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.01 60);
-  --primary: oklch(0.45 0.15 35);
+  --primary: oklch(0.42 0.13 35);
   --primary-foreground: oklch(0.98 0.005 85);
   --secondary: oklch(0.95 0.01 80);
   --secondary-foreground: oklch(0.2 0.01 60);
@@ -22,12 +22,13 @@
   --destructive-foreground: oklch(0.98 0.005 85);
   --border: oklch(0.88 0.01 70);
   --input: oklch(0.88 0.01 70);
-  --ring: oklch(0.45 0.15 35);
+  --ring: oklch(0.42 0.13 35);
   --radius: 0.5rem;
 
-  --paper: oklch(0.99 0.005 85);
+  --paper: oklch(1 0 0);
   --ink: oklch(0.18 0.01 60);
   --rule: oklch(0.85 0.01 60);
+  --workbench: oklch(0.93 0.008 80);
 }
 
 @theme inline {
@@ -72,15 +73,210 @@
   }
 }
 
-/* === The printable document === */
-.prose-print {
-  font-family: var(--font-serif);
+/* ===========================================================
+   Pagination stage
+   =========================================================== */
+.print-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  background: var(--workbench);
+  padding: 1.5rem 0;
+  border-radius: 8px;
+}
+
+.pages-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+/* Hidden measurement source — same width as a content area */
+.print-source {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  visibility: hidden;
+  pointer-events: none;
+  /* Width matches Letter content area by default; overridden via data-size on parent if needed */
+  width: calc(8.5in - 1.9in);
+}
+
+/* ===========================================================
+   Page sheet
+   =========================================================== */
+.page-sheet {
+  background: var(--paper);
+  width: 8.5in;
+  height: 11in;
+  padding: 0.85in 0.95in;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 6px 18px rgba(0, 0, 0, 0.06),
+    0 24px 50px rgba(0, 0, 0, 0.08);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid oklch(0.88 0.005 80);
+}
+
+.page-sheet[data-size='a4'] {
+  width: 210mm;
+  height: 297mm;
+  padding: 22mm 24mm;
+}
+
+.page-inner {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.page-footer {
+  flex: 0 0 auto;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 9pt;
+  color: var(--muted-foreground);
+  padding-top: 0.4in;
+  letter-spacing: 0.04em;
+}
+
+/* Visible page-break indicator between sheets (screen only) */
+.pages-stack .page-sheet + .page-sheet {
+  position: relative;
+}
+.pages-stack .page-sheet + .page-sheet::before {
+  content: 'page break';
+  position: absolute;
+  top: -0.85rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  background: var(--workbench);
+  padding: 0 0.5rem;
+}
+
+/* ===========================================================
+   Document header (cover/title block)
+   =========================================================== */
+.doc-header {
+  text-align: center;
+  margin-bottom: 1.6em;
+}
+.doc-title {
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  line-height: 1.1;
   color: var(--ink);
-  font-size: 11pt;
-  line-height: 1.65;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.doc-meta {
+  margin-top: 0.6em;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--muted-foreground);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5em;
+}
+.doc-sep {
+  opacity: 0.6;
+}
+.doc-header::after {
+  content: '';
+  display: block;
+  width: 96px;
+  height: 1px;
+  background: var(--rule);
+  margin: 1.2em auto 0;
+}
+
+/* Scientific theme: tighter, two-column-ready header */
+.doc-header--scientific {
+  text-align: center;
+  margin-bottom: 1.2em;
+}
+.doc-header--scientific .doc-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.55rem;
+  letter-spacing: 0;
+}
+.doc-header--scientific .doc-meta {
+  font-style: normal;
+  font-size: 0.78rem;
+  color: var(--ink);
+}
+.doc-header--scientific::after {
+  width: 100%;
+  margin-top: 0.8em;
+  background: var(--ink);
+}
+
+/* Manuscript theme: typewriter feel */
+.doc-header--manuscript .doc-title {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+.doc-header--manuscript .doc-meta {
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 0.75rem;
+}
+.doc-header--manuscript::after {
+  display: none;
+}
+
+/* Minimal theme */
+.doc-header--minimal {
+  text-align: left;
+}
+.doc-header--minimal .doc-title {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.8rem;
+  letter-spacing: -0.02em;
+}
+.doc-header--minimal .doc-meta {
+  justify-content: flex-start;
+  font-style: normal;
+}
+.doc-header--minimal::after {
+  margin: 1em 0 0;
+  width: 40px;
+  background: var(--ink);
+}
+
+/* ===========================================================
+   Base prose (used by all themes)
+   =========================================================== */
+.prose-print {
+  color: var(--ink);
   hyphens: auto;
   text-rendering: optimizeLegibility;
   font-feature-settings: 'kern', 'liga', 'onum';
+}
+
+.prose-print > *:first-child {
+  margin-top: 0;
+}
+.prose-print > *:last-child {
+  margin-bottom: 0;
 }
 
 .prose-print h1,
@@ -89,71 +285,9 @@
 .prose-print h4,
 .prose-print h5,
 .prose-print h6 {
-  font-family: var(--font-display);
-  font-weight: 400;
-  color: var(--ink);
-  letter-spacing: -0.01em;
-  line-height: 1.15;
   break-after: avoid;
   page-break-after: avoid;
-}
-
-.prose-print h1 {
-  font-size: 2.6rem;
-  margin: 0 0 0.4em;
-  text-align: center;
-  letter-spacing: -0.02em;
-}
-
-.prose-print > h1:first-child {
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 0.5em;
-  margin-bottom: 1em;
-}
-
-.prose-print h2 {
-  font-size: 1.75rem;
-  margin: 1.6em 0 0.5em;
-  border-bottom: 1px solid var(--rule);
-  padding-bottom: 0.25em;
-}
-
-.prose-print h3 {
-  font-size: 1.35rem;
-  margin: 1.4em 0 0.4em;
-  font-style: italic;
-}
-
-.prose-print h4 {
-  font-size: 1.1rem;
-  margin: 1.2em 0 0.3em;
-  font-weight: 600;
-}
-
-.prose-print p {
-  margin: 0 0 1em;
-  text-align: justify;
-  orphans: 3;
-  widows: 3;
-}
-
-.prose-print p + p {
-  text-indent: 1.5em;
-  margin-top: -0.5em;
-}
-
-.prose-print h1 + p,
-.prose-print h2 + p,
-.prose-print h3 + p,
-.prose-print h4 + p,
-.prose-print blockquote + p,
-.prose-print ul + p,
-.prose-print ol + p,
-.prose-print pre + p,
-.prose-print figure + p,
-.prose-print table + p {
-  text-indent: 0;
-  margin-top: 0;
+  color: var(--ink);
 }
 
 .prose-print a {
@@ -164,26 +298,14 @@
 }
 
 .prose-print strong {
-  font-weight: 600;
-  color: var(--ink);
+  font-weight: 700;
 }
-
 .prose-print em {
   font-style: italic;
 }
 
 .prose-print blockquote {
-  margin: 1.2em 0;
-  padding: 0.2em 1.4em;
-  border-left: 3px solid var(--primary);
-  color: var(--muted-foreground);
-  font-style: italic;
   break-inside: avoid;
-}
-
-.prose-print blockquote p {
-  text-indent: 0;
-  text-align: left;
 }
 
 .prose-print ul,
@@ -191,11 +313,9 @@
   margin: 0 0 1em;
   padding-left: 1.6em;
 }
-
 .prose-print li {
   margin: 0.25em 0;
 }
-
 .prose-print li > p {
   text-indent: 0;
   margin: 0;
@@ -208,7 +328,6 @@
   margin: 2em 0;
   break-after: avoid;
 }
-
 .prose-print hr::before {
   content: '· · ·';
   letter-spacing: 0.6em;
@@ -226,19 +345,17 @@
 
 .prose-print pre {
   font-family: var(--font-mono);
-  font-size: 0.85em;
-  line-height: 1.5;
+  font-size: 0.82em;
+  line-height: 1.55;
   background: var(--secondary);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 1em 1.2em;
-  margin: 1.2em 0;
-  overflow-x: auto;
+  padding: 0.9em 1.1em;
+  margin: 1.1em 0;
   break-inside: avoid;
   white-space: pre-wrap;
   word-wrap: break-word;
 }
-
 .prose-print pre code {
   background: transparent;
   border: none;
@@ -250,21 +367,17 @@
   width: 100%;
   border-collapse: collapse;
   margin: 1.2em 0;
-  font-size: 0.95em;
+  font-size: 0.92em;
   break-inside: avoid;
 }
-
 .prose-print th,
 .prose-print td {
   text-align: left;
-  padding: 0.5em 0.8em;
+  padding: 0.45em 0.7em;
   border-bottom: 1px solid var(--border);
 }
-
 .prose-print th {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 1.05em;
+  font-weight: 700;
   border-bottom: 2px solid var(--ink);
 }
 
@@ -276,8 +389,306 @@
   break-inside: avoid;
 }
 
-/* Drop cap for first paragraph after first H1 */
-.prose-print > h1:first-child + p::first-letter {
+/* ===========================================================
+   Theme: Editorial (default — magazine essay feel)
+   =========================================================== */
+.prose-print--editorial {
+  font-family: var(--font-serif);
+  font-size: 11pt;
+  line-height: 1.65;
+}
+.prose-print--editorial h1 {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  margin: 1.2em 0 0.4em;
+  text-align: center;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+.prose-print--editorial h2 {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  font-weight: 400;
+  margin: 1.5em 0 0.5em;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.25em;
+}
+.prose-print--editorial h3 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-style: italic;
+  font-weight: 400;
+  margin: 1.3em 0 0.4em;
+}
+.prose-print--editorial h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 1.1em 0 0.3em;
+}
+.prose-print--editorial p {
+  margin: 0 0 0.9em;
+  text-align: justify;
+  orphans: 3;
+  widows: 3;
+}
+.prose-print--editorial p + p {
+  text-indent: 1.5em;
+  margin-top: -0.4em;
+}
+.prose-print--editorial h1 + p,
+.prose-print--editorial h2 + p,
+.prose-print--editorial h3 + p,
+.prose-print--editorial h4 + p,
+.prose-print--editorial blockquote + p,
+.prose-print--editorial ul + p,
+.prose-print--editorial ol + p,
+.prose-print--editorial pre + p,
+.prose-print--editorial table + p {
+  text-indent: 0;
+  margin-top: 0;
+}
+.prose-print--editorial blockquote {
+  margin: 1.2em 0;
+  padding: 0.2em 1.4em;
+  border-left: 3px solid var(--primary);
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+.prose-print--editorial blockquote p {
+  text-indent: 0;
+  text-align: left;
+}
+
+/* ===========================================================
+   Theme: Scientific (LaTeX-style research paper)
+   =========================================================== */
+.prose-print--scientific {
+  font-family: var(--font-serif);
+  font-size: 10.5pt;
+  line-height: 1.45;
+  text-align: justify;
+}
+.prose-print--scientific h1 {
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 0.4em;
+  letter-spacing: 0;
+}
+.prose-print--scientific h2 {
+  font-family: var(--font-serif);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 1.3em 0 0.4em;
+  text-transform: none;
+}
+.prose-print--scientific h3 {
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  font-weight: 700;
+  font-style: italic;
+  margin: 1em 0 0.3em;
+}
+.prose-print--scientific h4 {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 0.9em 0 0.2em;
+  font-style: italic;
+}
+.prose-print--scientific p {
+  margin: 0 0 0.5em;
+  text-align: justify;
+  orphans: 2;
+  widows: 2;
+}
+.prose-print--scientific p + p {
+  text-indent: 1.2em;
+  margin-top: 0;
+}
+.prose-print--scientific h1 + p,
+.prose-print--scientific h2 + p,
+.prose-print--scientific h3 + p,
+.prose-print--scientific h4 + p,
+.prose-print--scientific blockquote + p,
+.prose-print--scientific ul + p,
+.prose-print--scientific ol + p,
+.prose-print--scientific pre + p,
+.prose-print--scientific table + p {
+  text-indent: 0;
+}
+.prose-print--scientific blockquote {
+  margin: 0.8em 1.2em;
+  padding: 0.4em 0.9em;
+  border-left: 2px solid var(--ink);
+  background: oklch(0.97 0.005 85);
+  font-style: normal;
+  font-size: 0.95em;
+}
+.prose-print--scientific blockquote p {
+  text-indent: 0;
+  text-align: justify;
+  margin: 0;
+}
+.prose-print--scientific table {
+  font-size: 0.88em;
+}
+.prose-print--scientific th {
+  font-weight: 700;
+  border-top: 1.5px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.prose-print--scientific table tr:last-child td {
+  border-bottom: 1.5px solid var(--ink);
+}
+.prose-print--scientific pre {
+  font-size: 0.78em;
+  background: oklch(0.97 0.005 85);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+}
+.prose-print--scientific code {
+  background: oklch(0.97 0.005 85);
+  border-radius: 2px;
+  border: none;
+}
+.prose-print--scientific hr::before {
+  content: '';
+}
+.prose-print--scientific hr {
+  border-top: 1px solid var(--rule);
+  margin: 1.4em auto;
+  width: 30%;
+}
+.prose-print--scientific ol,
+.prose-print--scientific ul {
+  margin: 0.4em 0 0.8em;
+}
+
+/* ===========================================================
+   Theme: Manuscript (typewritten, double-spaced)
+   =========================================================== */
+.prose-print--manuscript {
+  font-family: var(--font-mono);
+  font-size: 11pt;
+  line-height: 2;
+}
+.prose-print--manuscript h1,
+.prose-print--manuscript h2,
+.prose-print--manuscript h3,
+.prose-print--manuscript h4 {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.prose-print--manuscript h1 {
+  font-size: 1.1rem;
+  text-align: center;
+  margin: 1em 0 0.5em;
+}
+.prose-print--manuscript h2 {
+  font-size: 1rem;
+  margin: 1.4em 0 0.3em;
+}
+.prose-print--manuscript h3 {
+  font-size: 0.95rem;
+  margin: 1.1em 0 0.2em;
+  text-transform: none;
+  font-style: italic;
+}
+.prose-print--manuscript h4 {
+  font-size: 0.9rem;
+  margin: 0.9em 0 0.2em;
+  text-transform: none;
+}
+.prose-print--manuscript p {
+  margin: 0;
+  text-indent: 2em;
+  text-align: left;
+}
+.prose-print--manuscript h1 + p,
+.prose-print--manuscript h2 + p,
+.prose-print--manuscript h3 + p,
+.prose-print--manuscript h4 + p,
+.prose-print--manuscript blockquote + p,
+.prose-print--manuscript ul + p,
+.prose-print--manuscript ol + p,
+.prose-print--manuscript pre + p {
+  text-indent: 0;
+}
+.prose-print--manuscript blockquote {
+  margin: 1em 2em;
+  font-style: normal;
+  border-left: 2px solid var(--ink);
+  padding-left: 1em;
+}
+.prose-print--manuscript pre {
+  background: transparent;
+  border: 1px dashed var(--border);
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+.prose-print--manuscript code {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.prose-print--manuscript table {
+  font-size: 0.9em;
+}
+
+/* ===========================================================
+   Theme: Minimal (sans-serif, modern)
+   =========================================================== */
+.prose-print--minimal {
+  font-family: var(--font-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.6;
+}
+.prose-print--minimal h1,
+.prose-print--minimal h2,
+.prose-print--minimal h3,
+.prose-print--minimal h4 {
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.prose-print--minimal h1 {
+  font-size: 1.7rem;
+  margin: 1em 0 0.4em;
+}
+.prose-print--minimal h2 {
+  font-size: 1.25rem;
+  margin: 1.4em 0 0.4em;
+}
+.prose-print--minimal h3 {
+  font-size: 1.05rem;
+  margin: 1.1em 0 0.3em;
+}
+.prose-print--minimal h4 {
+  font-size: 0.95rem;
+  margin: 0.9em 0 0.2em;
+}
+.prose-print--minimal p {
+  margin: 0 0 0.8em;
+  text-align: left;
+}
+.prose-print--minimal blockquote {
+  margin: 1em 0;
+  padding: 0.4em 1em;
+  border-left: 3px solid var(--primary);
+  color: var(--muted-foreground);
+}
+.prose-print--minimal blockquote p {
+  margin: 0;
+}
+
+/* ===========================================================
+   Drop cap (editorial only) — applies to first paragraph after first H1
+   =========================================================== */
+.prose-print--editorial > h1:first-child + p::first-letter {
   font-family: var(--font-display);
   font-size: 3.6em;
   float: left;
@@ -286,7 +697,7 @@
   color: var(--primary);
 }
 
-/* Syntax highlighting tokens (subtle, print-friendly) */
+/* Syntax highlighting tokens */
 .hljs-comment,
 .hljs-quote {
   color: oklch(0.55 0.02 60);
@@ -321,50 +732,57 @@
   color: oklch(0.45 0.15 35);
 }
 
-/* === Paper / Page sizing === */
-.page-sheet {
-  background: var(--paper);
-  width: 8.5in;
-  min-height: 11in;
-  padding: 0.85in 0.95in;
-  margin: 0 auto;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.08),
-    0 24px 60px rgba(0, 0, 0, 0.08);
-  position: relative;
-}
-
-.page-sheet[data-size='a4'] {
-  width: 210mm;
-  min-height: 297mm;
-  padding: 22mm 24mm;
-}
-
-/* === Print === */
+/* ===========================================================
+   Print
+   =========================================================== */
 @media print {
   @page {
     size: letter;
     margin: 0.85in 0.95in;
   }
-  @page :first {
-    margin-top: 1in;
-  }
   html,
   body {
     background: white !important;
   }
-  .no-print {
+  .no-print,
+  .print-source {
+    display: none !important;
+  }
+  .print-stage {
+    background: white !important;
+    padding: 0 !important;
+    gap: 0 !important;
+    border-radius: 0 !important;
+  }
+  .pages-stack {
+    gap: 0 !important;
+  }
+  .pages-stack .page-sheet + .page-sheet::before {
     display: none !important;
   }
   .page-sheet {
     width: 100% !important;
+    height: auto !important;
     min-height: 0 !important;
     padding: 0 !important;
     margin: 0 !important;
     box-shadow: none !important;
+    border: none !important;
     background: white !important;
+    overflow: visible !important;
+    page-break-after: always;
+    break-after: page;
+    display: block !important;
   }
-  .prose-print {
-    font-size: 11pt;
+  .page-sheet:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+  .page-inner {
+    overflow: visible !important;
+  }
+  .page-footer {
+    display: none !important;
   }
   .prose-print a {
     color: var(--ink);
@@ -375,5 +793,12 @@
   .prose-print img,
   .prose-print figure {
     break-inside: avoid;
+  }
+}
+
+/* A4 print page */
+@media print {
+  .pages-stack[data-print-size='a4'] {
+    /* placeholder */
   }
 }

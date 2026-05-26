@@ -1,64 +1,66 @@
-export const SAMPLE_MARKDOWN = `# The Art of Beautiful Print
+export const SAMPLE_MARKDOWN = `# On the Emergent Behavior of Large Language Models in Structured Report Generation
 
-*An essay on typography, paper, and the quiet pleasure of well-set words.*
+> **Abstract.** We present an empirical analysis of large language models (LLMs) when tasked with generating long-form, structured technical reports. Our findings indicate that emergent organizational behaviors arise once model scale exceeds a critical parameter threshold, and that prompt-level scaffolding meaningfully reduces hallucination rates in citation-dense passages. We report a 34.2% reduction in factual error rate when retrieval-augmented context is supplied at inference time.
 
-There is something profoundly satisfying about ink on paper. In an age of glowing rectangles, the printed page persists — not out of nostalgia, but because it works. A well-typeset document is a tool for thinking, a vessel for ideas, and, sometimes, simply a beautiful object.
+**Keywords:** large language models, report generation, retrieval augmentation, evaluation
 
-## Why Print Still Matters
+## 1. Introduction
 
-Reading on paper changes how we think. Studies have shown improvements in **comprehension**, **retention**, and **focus** when readers engage with physical text rather than screens. The page asks for our full attention, and rewards it generously.
+Recent advances in transformer-based language modeling have produced systems capable of generating documents of substantial length and apparent coherence. Yet the practical question of whether such systems can produce *publication-quality* reports — with consistent terminology, faithful citations, and a logical argumentative arc — remains under-explored.
 
-> Typography is the craft of endowing human language with a durable visual form.
-> — Robert Bringhurst
+In this work we examine three axes of behavior:
 
-### A Few Principles
+1. **Structural coherence** across section boundaries.
+2. **Citation fidelity** when external sources are referenced.
+3. **Quantitative accuracy** when numerical claims are made.
 
-1. **Generous margins.** White space is not wasted space; it is the silence that lets the words breathe.
-2. **Considered hierarchy.** Headings should guide the eye, not shout at it.
-3. **Honest materials.** Serifs for body text. Justified, but not awkwardly so.
+## 2. Methodology
 
-## Code, Set Beautifully
+We evaluated a suite of frontier models across 1,284 prompts drawn from arXiv abstracts spanning physics, biology, and computer science. Each model produced a full report of approximately 2,500 words, which was then scored by both automated metrics and expert human reviewers.
 
-Even technical writing deserves care. Here is a small JavaScript example:
+### 2.1 Scoring Rubric
 
-\`\`\`js
-function greet(name) {
-  const hour = new Date().getHours();
-  const part = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
-  return \`Good \${part}, \${name}.\`;
-}
+| Dimension          | Weight | Method                          |
+| ------------------ | ------ | ------------------------------- |
+| Factual accuracy   | 0.35   | Source-grounded human review    |
+| Structural quality | 0.25   | Rubric-based reviewer scoring   |
+| Citation fidelity  | 0.20   | Automated cross-reference check |
+| Stylistic polish   | 0.20   | Blind pairwise comparison       |
 
-console.log(greet("reader"));
+### 2.2 Implementation
+
+The evaluation pipeline was implemented in Python and is reproduced in part below:
+
+\`\`\`python
+def evaluate(model, prompt, references):
+    output = model.generate(prompt, max_tokens=4096)
+    scores = {
+        "factual": grade_facts(output, references),
+        "structure": grade_structure(output),
+        "citations": verify_citations(output, references),
+    }
+    return weighted_mean(scores, WEIGHTS)
 \`\`\`
 
-Inline code such as \`Array.prototype.map\` should also feel at home on the page.
+## 3. Results
 
-## Lists, Tables, and Quotes
+The principal finding is that retrieval augmentation produces a statistically significant improvement on the factual dimension (p < 0.001), with diminishing — but still positive — returns on structural and stylistic dimensions.
 
-A modest table:
+> A particularly striking observation is that smaller models, once augmented, frequently outperformed unaugmented larger models on factual accuracy. This suggests that grounding may substitute for raw scale in narrow report-generation tasks.
 
-| Element     | Purpose                  | Example          |
-| ----------- | ------------------------ | ---------------- |
-| Heading     | Establish hierarchy      | This very title  |
-| Body        | Carry the argument       | These paragraphs |
-| Pull-quote  | Anchor the reader's eye  | The Bringhurst   |
+## 4. Discussion
 
-A nested list, just because:
+These results carry several implications for the design of automated report-generation pipelines. First, the cost-benefit calculation favors retrieval over scale when factual fidelity is paramount. Second, structural quality is largely a function of prompt scaffolding rather than model capability per se.
 
-- Paper
-  - Cotton
-  - Bamboo
-  - Recycled
-- Ink
-  - Carbon black
-  - Indigo
-  - Vermillion
+## 5. Conclusion
+
+Large language models, properly grounded, are now capable of producing structured technical reports of meaningful utility. The remaining frontier is not fluency but *faithfulness* — and that frontier appears to be tractable through retrieval, careful prompting, and disciplined evaluation.
 
 ---
 
-## Closing Thoughts
+## References
 
-Paste your own markdown into the editor, and click **Print**. Your printer will thank you, and so, perhaps, will your reader.
-
-> *Good design is as little design as possible.* — Dieter Rams
+1. Vaswani, A. et al. *Attention Is All You Need.* NeurIPS, 2017.
+2. Brown, T. et al. *Language Models are Few-Shot Learners.* NeurIPS, 2020.
+3. Lewis, P. et al. *Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks.* NeurIPS, 2020.
 `
