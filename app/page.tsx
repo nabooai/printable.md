@@ -24,6 +24,12 @@ export default function Page() {
   const [theme, setTheme] = useLocalStorage<Theme>('pp:theme', 'scientific')
   const [showEditor, setShowEditor] = useState(true)
 
+  // Update document.title from first heading so the printed page title reflects the doc
+  useEffect(() => {
+    const firstHeading = markdown.match(/^#\s+(.+?)\s*$/m)?.[1]?.trim()
+    document.title = firstHeading ? `${firstHeading} | Nisism Print` : 'Nisism Print'
+  }, [markdown])
+
   // Set @page size at print time based on selection
   useEffect(() => {
     const styleId = 'pp-page-size-style'
