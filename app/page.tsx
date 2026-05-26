@@ -6,7 +6,12 @@ import { SAMPLE_MARKDOWN } from '@/lib/sample-markdown'
 import { useLocalStorage } from '@/hooks/use-local-storage'
 import { Printer, FileText, Eye, Download, BookOpen, FlaskConical, Type, Minus } from 'lucide-react'
 
-const THEMES: { id: Theme; label: string; description: string; icon: React.ComponentType<{ className?: string }> }[] = [
+const THEMES: {
+  id: Theme
+  label: string
+  description: string
+  icon: React.ComponentType<{ className?: string }>
+}[] = [
   { id: 'scientific', label: 'Scientific', description: 'IEEE-style research paper', icon: FlaskConical },
   { id: 'editorial', label: 'Editorial', description: 'Magazine essay with drop cap', icon: BookOpen },
   { id: 'manuscript', label: 'Manuscript', description: 'Typewritten, double-spaced', icon: Type },
@@ -15,18 +20,9 @@ const THEMES: { id: Theme; label: string; description: string; icon: React.Compo
 
 export default function Page() {
   const [markdown, setMarkdown] = useLocalStorage<string>('pp:markdown', SAMPLE_MARKDOWN)
-  const [title, setTitle] = useLocalStorage<string>(
-    'pp:title',
-    'On the Emergent Behavior of Large Language Models in Structured Report Generation',
-  )
-  const [author, setAuthor] = useLocalStorage<string>('pp:author', '')
-  const [affiliation, setAffiliation] = useLocalStorage<string>('pp:affiliation', '')
   const [pageSize, setPageSize] = useLocalStorage<PageSize>('pp:pageSize', 'letter')
   const [theme, setTheme] = useLocalStorage<Theme>('pp:theme', 'scientific')
-  const [showMeta, setShowMeta] = useLocalStorage<boolean>('pp:showMeta', true)
-  const [showPageNumbers, setShowPageNumbers] = useLocalStorage<boolean>('pp:showPageNumbers', true)
   const [showEditor, setShowEditor] = useState(true)
-  const [pageCount, setPageCount] = useState(1)
 
   // Set @page size at print time based on selection
   useEffect(() => {
@@ -48,8 +44,9 @@ export default function Page() {
     const blob = new Blob([markdown], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
+    const firstHeading = markdown.match(/^#\s+(.+?)\s*$/m)?.[1] ?? 'document'
     a.href = url
-    a.download = `${(title || 'document').replace(/\s+/g, '-').toLowerCase().slice(0, 60)}.md`
+    a.download = `${firstHeading.replace(/\s+/g, '-').toLowerCase().slice(0, 60)}.md`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -76,19 +73,12 @@ export default function Page() {
                 Paperpress
               </div>
               <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                LLM reports · printed beautifully
+                LLM reports, printed beautifully
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div
-              className="hidden items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs sm:inline-flex"
-              style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}
-            >
-              <span className="font-mono">{pageCount}</span>
-              <span>{pageCount === 1 ? 'page' : 'pages'}</span>
-            </div>
             <button
               onClick={() => setShowEditor(!showEditor)}
               className="hidden items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition hover:bg-secondary sm:inline-flex"
@@ -165,53 +155,8 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* Document fields */}
-              <div className="grid grid-cols-2 gap-3 border-b p-4" style={{ borderColor: 'var(--border)' }}>
-                <label className="col-span-2 flex flex-col gap-1.5">
-                  <span
-                    className="text-xs font-medium uppercase tracking-wide"
-                    style={{ color: 'var(--muted-foreground)' }}
-                  >
-                    Title
-                  </span>
-                  <input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Document title"
-                    className="rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2"
-                    style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span
-                    className="text-xs font-medium uppercase tracking-wide"
-                    style={{ color: 'var(--muted-foreground)' }}
-                  >
-                    Author
-                  </span>
-                  <input
-                    value={author}
-                    onChange={(e) => setAuthor(e.target.value)}
-                    placeholder="Optional"
-                    className="rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2"
-                    style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
-                  />
-                </label>
-                <label className="flex flex-col gap-1.5">
-                  <span
-                    className="text-xs font-medium uppercase tracking-wide"
-                    style={{ color: 'var(--muted-foreground)' }}
-                  >
-                    Affiliation
-                  </span>
-                  <input
-                    value={affiliation}
-                    onChange={(e) => setAffiliation(e.target.value)}
-                    placeholder="Optional"
-                    className="rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2"
-                    style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
-                  />
-                </label>
+              {/* Page size */}
+              <div className="border-b p-4" style={{ borderColor: 'var(--border)' }}>
                 <label className="flex flex-col gap-1.5">
                   <span
                     className="text-xs font-medium uppercase tracking-wide"
@@ -225,32 +170,14 @@ export default function Page() {
                     className="rounded-md border bg-transparent px-3 py-2 text-sm outline-none focus:ring-2"
                     style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
                   >
-                    <option value="letter">US Letter</option>
-                    <option value="a4">A4</option>
+                    <option value="letter">US Letter (8.5 × 11 in)</option>
+                    <option value="a4">A4 (210 × 297 mm)</option>
                   </select>
                 </label>
-                <label className="flex items-end gap-2 pb-2">
-                  <input
-                    type="checkbox"
-                    checked={showMeta}
-                    onChange={(e) => setShowMeta(e.target.checked)}
-                    className="h-4 w-4 rounded"
-                  />
-                  <span className="text-sm" style={{ color: 'var(--ink)' }}>
-                    Title block
-                  </span>
-                </label>
-                <label className="flex items-end gap-2 pb-2">
-                  <input
-                    type="checkbox"
-                    checked={showPageNumbers}
-                    onChange={(e) => setShowPageNumbers(e.target.checked)}
-                    className="h-4 w-4 rounded"
-                  />
-                  <span className="text-sm" style={{ color: 'var(--ink)' }}>
-                    Page numbers
-                  </span>
-                </label>
+                <p className="mt-2 text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+                  Tip: the first <code className="font-mono">#</code> heading becomes the document title.
+                  Page numbers can be added by your printer dialog.
+                </p>
               </div>
 
               {/* Editor */}
@@ -283,29 +210,16 @@ export default function Page() {
             <span className="uppercase tracking-wider">
               Preview · {THEMES.find((t) => t.id === theme)?.label}
             </span>
-            <span>
-              {pageSize === 'letter' ? '8.5 × 11 in' : '210 × 297 mm'} · {pageCount}{' '}
-              {pageCount === 1 ? 'page' : 'pages'}
-            </span>
+            <span>{pageSize === 'letter' ? '8.5 × 11 in' : '210 × 297 mm'}</span>
           </div>
           <div id="print-root">
-            <PrintDocument
-              markdown={markdown}
-              title={title}
-              author={author}
-              affiliation={affiliation}
-              pageSize={pageSize}
-              theme={theme}
-              showMeta={showMeta}
-              showPageNumbers={showPageNumbers}
-              onPageCount={setPageCount}
-            />
+            <PrintDocument markdown={markdown} pageSize={pageSize} theme={theme} />
           </div>
           <div
             className="no-print mt-6 text-center text-xs italic"
             style={{ color: 'var(--muted-foreground)' }}
           >
-            {'Tip: in the print dialog, disable "Headers and footers" for the cleanest result.'}
+            {'Tip: in your print dialog, enable "Headers and footers" if you want page numbers.'}
           </div>
         </section>
       </div>

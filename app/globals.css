@@ -80,90 +80,84 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
   background: var(--workbench);
   padding: 1.5rem 0;
   border-radius: 8px;
 }
 
-.pages-stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.25rem;
-  width: 100%;
-}
-
-/* Hidden measurement source — same width as a content area */
-.print-source {
-  position: absolute;
-  left: -10000px;
-  top: 0;
-  visibility: hidden;
-  pointer-events: none;
-  /* Width matches Letter content area by default; overridden via data-size on parent if needed */
-  width: calc(8.5in - 1.9in);
-}
-
 /* ===========================================================
-   Page sheet
+   Page paper — single flowing sheet width with page-break guides
    =========================================================== */
-.page-sheet {
+.page-paper {
   background: var(--paper);
   width: 8.5in;
-  height: 11in;
   padding: 0.85in 0.95in;
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.05),
     0 6px 18px rgba(0, 0, 0, 0.06),
     0 24px 50px rgba(0, 0, 0, 0.08);
   position: relative;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
   border: 1px solid oklch(0.88 0.005 80);
+  /* Page-break guides: a thin dashed rule every page height, drawn via background.
+     Page area = 11in total - 0.85in*2 padding = 9.3in of content; we draw the
+     guide at the bottom of each page boundary measured from the top of the
+     content box (which begins after the top padding). */
 }
 
-.page-sheet[data-size='a4'] {
+.page-paper[data-size='a4'] {
   width: 210mm;
-  height: 297mm;
   padding: 22mm 24mm;
 }
 
-.page-inner {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.page-footer {
-  flex: 0 0 auto;
-  text-align: center;
-  font-family: var(--font-mono);
-  font-size: 9pt;
-  color: var(--muted-foreground);
-  padding-top: 0.4in;
-  letter-spacing: 0.04em;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Visible page-break indicator between sheets (screen only) */
-.pages-stack .page-sheet + .page-sheet {
+/* The visual page-break overlay. Positioned over the entire paper, with
+   horizontal dashed lines at each page boundary. Hidden during print. */
+.page-paper__inner {
   position: relative;
 }
-.pages-stack .page-sheet + .page-sheet::before {
-  content: 'page break';
+
+.page-paper::after {
+  content: '';
   position: absolute;
-  top: -0.85rem;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--muted-foreground);
-  background: var(--workbench);
-  padding: 0 0.5rem;
+  left: 0;
+  right: 0;
+  top: 11in; /* first break after one full page */
+  height: 0;
+  border-top: 1px dashed oklch(0.7 0.02 60);
+  pointer-events: none;
+}
+
+/* Multiple guides via repeating background — more reliable than ::after stacking.
+   We layer a repeating linear-gradient on the .page-paper background. */
+.page-paper {
+  background-image:
+    linear-gradient(var(--paper), var(--paper)),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(11in - 1px),
+      oklch(0.78 0.02 60) calc(11in - 1px),
+      oklch(0.78 0.02 60) 11in
+    );
+  background-repeat: no-repeat, repeat-y;
+  background-size: 100% 0.85in, 100% auto; /* mask top padding so first guide doesn't show in margin */
+  background-position: top left, 0 0.85in;
+}
+.page-paper[data-size='a4'] {
+  background-image:
+    linear-gradient(var(--paper), var(--paper)),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent calc(297mm - 1px),
+      oklch(0.78 0.02 60) calc(297mm - 1px),
+      oklch(0.78 0.02 60) 297mm
+    );
+  background-size: 100% 22mm, 100% auto;
+  background-position: top left, 0 22mm;
+}
+/* Hide the legacy single ::after rule (we use the gradient approach). */
+.page-paper::after {
+  display: none;
 }
 
 /* ===========================================================
@@ -745,42 +739,25 @@
   body {
     background: white !important;
   }
-  .no-print,
-  .print-source {
+  .no-print {
     display: none !important;
   }
   .print-stage {
     background: white !important;
     padding: 0 !important;
-    gap: 0 !important;
     border-radius: 0 !important;
   }
-  .pages-stack {
-    gap: 0 !important;
-  }
-  .pages-stack .page-sheet + .page-sheet::before {
-    display: none !important;
-  }
-  .page-sheet {
+  .page-paper {
     width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
     padding: 0 !important;
     margin: 0 !important;
     box-shadow: none !important;
     border: none !important;
     background: white !important;
-    overflow: visible !important;
-    page-break-after: always;
-    break-after: page;
-    display: block !important;
+    background-image: none !important;
   }
-  .page-sheet:last-child {
-    page-break-after: auto;
-    break-after: auto;
-  }
-  .page-inner {
-    overflow: visible !important;
+  .page-paper::after {
+    display: none !important;
   }
   .prose-print a {
     color: var(--ink);
@@ -791,12 +768,5 @@
   .prose-print img,
   .prose-print figure {
     break-inside: avoid;
-  }
-}
-
-/* A4 print page */
-@media print {
-  .pages-stack[data-print-size='a4'] {
-    /* placeholder */
   }
 }
