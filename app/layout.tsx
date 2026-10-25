@@ -10,7 +10,6 @@ import {
   Space_Grotesk,
   Archivo_Black,
 } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 const instrumentSerif = Instrument_Serif({
@@ -63,8 +62,20 @@ const archivoBlack = Archivo_Black({
 })
 
 export const metadata: Metadata = {
-  title: 'Nisism Print',
+  title: 'PRINTABLE.md',
   description: 'Turn plain markdown into a beautifully typeset, printable document.',
+  openGraph: {
+    title: 'PRINTABLE.md',
+    description: 'Turn plain markdown into a beautifully typeset, printable document.',
+    url: 'https://printable.md',
+    siteName: 'PRINTABLE.md',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'PRINTABLE.md',
+    description: 'Turn plain markdown into a beautifully typeset, printable document.',
+  },
 }
 
 export default function RootLayout({
@@ -78,7 +89,6 @@ export default function RootLayout({
         className={`${instrumentSerif.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${playfair.variable} ${bebas.variable} ${inter.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${archivoBlack.variable} font-sans antialiased`}
       >
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )

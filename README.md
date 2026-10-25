@@ -24,6 +24,18 @@ pnpm build   # production build (type errors fail the build)
 pnpm lint    # ESLint (eslint-config-next)
 ```
 
+## Deploy
+
+The app is a static export (`output: 'export'`, built into `out/`) hosted on
+Cloudflare Pages, project `printable-md`, served at https://printable.md.
+
+```bash
+pnpm run deploy   # build + wrangler pages deploy (needs `wrangler login`)
+```
+
+Deploys are manual: pushing to `main` does not deploy. The script refuses to
+run unless the working tree is clean and `HEAD` is `origin/main`.
+
 Code lives in `app/` (page, layout, theme CSS in `globals.css`),
 `components/print-document.tsx`, `hooks/` and `lib/`.
 

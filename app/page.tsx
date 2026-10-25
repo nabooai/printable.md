@@ -111,7 +111,7 @@ export default function Page() {
   // Update document.title from first heading
   useEffect(() => {
     const firstHeading = markdown.match(/^#\s+(.+?)\s*$/m)?.[1]?.trim()
-    document.title = firstHeading ? `${firstHeading} | Nisism Print` : 'Nisism Print'
+    document.title = firstHeading ? `${firstHeading} | PRINTABLE.md` : 'PRINTABLE.md'
   }, [markdown])
 
   // Set @page size at print time based on selection
@@ -189,7 +189,7 @@ export default function Page() {
             </div>
             <div className="leading-tight">
               <div className="font-display text-xl" style={{ color: 'var(--ink)' }}>
-                Nisism Print
+                PRINTABLE.md
               </div>
               <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                 Paste markdown. Print beautifully.

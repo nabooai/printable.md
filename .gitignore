@@ -5,12 +5,13 @@ node_modules
 .next/
 out/
 *.tsbuildinfo
+next-env.d.ts
 
 # Environment variables
 .env*.local
 
-# Vercel
-.vercel/
+# Cloudflare Wrangler
+.wrangler/
 
 # Python (skill renderer)
 __pycache__/

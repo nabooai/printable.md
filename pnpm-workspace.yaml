@@ -1,3 +1,6 @@
 allowBuilds:
   # Only fetches a fallback native binding; prebuilt optional deps cover supported platforms.
   unrs-resolver: false
+  # wrangler (deploy tooling): install scripts fetch/verify platform binaries.
+  esbuild: true
+  workerd: true
