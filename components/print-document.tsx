@@ -46,6 +46,8 @@ interface PrintDocumentProps {
   pageSize: PageSize
   theme: Theme
   typography?: TypographySettings
+  /** Screen-only decoration rendered inside the sheet (page furniture preview). */
+  overlay?: React.ReactNode
 }
 
 // Extract the first leading H1 ("# Title") from the markdown so we can render it
@@ -67,6 +69,7 @@ export function PrintDocument({
   pageSize,
   theme,
   typography = DEFAULT_TYPOGRAPHY,
+  overlay,
 }: PrintDocumentProps) {
   const { title, body } = useMemo(() => extractLeadingTitle(markdown), [markdown])
   // Avoid SSR/CSR mismatch: rehype-highlight produces different markup on the
@@ -114,6 +117,7 @@ export function PrintDocument({
             </>
           )}
         </div>
+        {overlay}
       </article>
     </div>
   )

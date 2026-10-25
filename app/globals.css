@@ -1515,6 +1515,9 @@
    Print
    =========================================================== */
 @media print {
+  /* Fallback only — the real @page rule (size, margins scaled by the Page
+     margin slider, page numbers / header / footer margin boxes) is generated
+     in JS into <style id="pp-page-size-style">; see lib/print-settings.ts. */
   @page {
     size: letter;
     margin: 0.85in 0.95in;
@@ -1543,11 +1546,33 @@
   .prose-print a {
     color: var(--ink);
   }
-  .prose-print pre,
   .prose-print blockquote,
   .prose-print img,
   .prose-print figure {
     break-inside: avoid;
+  }
+  /* Code on paper: no horizontal scrolling exists, so wrap long lines, and let
+     tall blocks split across pages instead of jumping (gap) or clipping. */
+  .prose-print pre,
+  .prose-print pre code {
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  .prose-print pre {
+    break-inside: auto !important;
+  }
+  /* The app shell's layout padding (px-6/py-6 around #print-root) must not
+     shrink the printed measure: @page margins are the only page margins, so
+     print matches the on-screen sheet and the margin-box header/footer. */
+  main > div:has(#print-root),
+  section:has(> #print-root) {
+    display: block !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 }
 
@@ -1641,9 +1666,68 @@
   padding: calc(22mm * var(--pp-page-margin)) calc(24mm * var(--pp-page-margin));
 }
 
+/* Code on the sheet wraps like it will on paper (no sideways scrolling), so
+   the preview — and its page-break guides — match the printout. */
+.print-stage .prose-print pre,
+.print-stage .prose-print pre code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* (Printed @page margins are generated in JS from the same multiplier —
+   @page can't see --pp-page-margin, which lives on .print-stage.) */
+
+/* On-screen preview of page furniture (header / footer / page numbers) and
+   approximate page-break guides. Screen only. */
+.page-furniture {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.page-furniture__band {
+  position: absolute;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1em;
+  font-family: var(--pp-run-font, inherit);
+  font-size: 8.5pt;
+  line-height: 1;
+  color: var(--pp-run-color, var(--muted-foreground));
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+.page-furniture__band[data-edge='top'] {
+  transform: translateY(-50%);
+}
+.page-furniture__band[data-edge='bottom'] {
+  transform: translateY(50%);
+}
+.page-furniture__band > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.page-furniture__guide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed color-mix(in srgb, var(--ink) 24%, transparent);
+  pointer-events: auto;
+}
+.page-furniture__guide > span {
+  position: absolute;
+  right: 6px;
+  top: 2px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: color-mix(in srgb, var(--ink) 35%, transparent);
+}
 @media print {
-  @page {
-    margin: calc(0.85in * var(--pp-page-margin)) calc(0.95in * var(--pp-page-margin));
+  .page-furniture {
+    display: none !important;
   }
 }
 

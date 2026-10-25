@@ -83,6 +83,8 @@ body{background:var(--workbench);}
   .print-stage{background:white !important;padding:0 !important;min-height:0 !important;}
   .page-paper{width:100% !important;padding:0 !important;margin:0 !important;box-shadow:none !important;border:none !important;background:white !important;}
   .prose-print a{color:var(--ink);}
+  .prose-print pre,.prose-print pre code{white-space:pre-wrap !important;overflow-wrap:anywhere !important;overflow:visible !important;max-height:none !important;}
+  .prose-print pre{break-inside:auto !important;}
 }
 """
 
