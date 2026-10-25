@@ -83,7 +83,9 @@ export function normalizeTypography(v: unknown, defaults: TypographySettings): T
     paragraphSpacing: num('paragraphSpacing'),
     letterSpacing: num('letterSpacing'),
     pageMargin: num('pageMargin'),
-    justify: bool(o.justify, defaults.justify),
     hyphenate: bool(o.hyphenate, defaults.hyphenate),
+    // Optional override; anything else (incl. the old `justify` boolean) means
+    // "use the theme's own alignment".
+    ...(o.align === 'justify' || o.align === 'left' ? { align: o.align } : null),
   }
 }
