@@ -11,6 +11,7 @@
 //    NOT count, so empty boxes use "" to keep the browser's defaults away.
 //  - string-set / running() are unsupported, so header text is a literal.
 import type { PageSize } from '@/components/print-document'
+import { bool, isRecord, oneOf, str } from '@/lib/settings'
 
 export type PageNumberPosition = 'bottom-center' | 'bottom-right' | 'top-right'
 export type PageNumberFormat = 'n' | 'n-of-total' | 'page-n-of-total'
@@ -38,9 +39,26 @@ export const DEFAULT_PRINT: PrintSettings = {
 
 export const PRINT_STORAGE_KEY = 'pp:print'
 
-/** Fill in any fields missing from an older/partial stored value. */
-export function normalizePrintSettings(v: Partial<PrintSettings> | null | undefined): PrintSettings {
-  return { ...DEFAULT_PRINT, ...(v && typeof v === 'object' ? v : {}) }
+const POSITIONS = ['bottom-center', 'bottom-right', 'top-right'] as const satisfies readonly PageNumberPosition[]
+const FORMATS = ['n', 'n-of-total', 'page-n-of-total'] as const satisfies readonly PageNumberFormat[]
+const HEADER_MODES = ['off', 'title', 'custom'] as const satisfies readonly HeaderMode[]
+
+/**
+ * Validate a stored (possibly old, partial or corrupt) value field by field;
+ * anything missing or of the wrong type falls back to the default. Never throws.
+ */
+export function normalizePrintSettings(v: unknown): PrintSettings {
+  const o = isRecord(v) ? v : {}
+  const d = DEFAULT_PRINT
+  return {
+    pageNumbers: bool(o.pageNumbers, d.pageNumbers),
+    pageNumberPosition: oneOf(POSITIONS, o.pageNumberPosition, d.pageNumberPosition),
+    pageNumberFormat: oneOf(FORMATS, o.pageNumberFormat, d.pageNumberFormat),
+    header: oneOf(HEADER_MODES, o.header, d.header),
+    headerText: str(o.headerText, d.headerText),
+    footerText: str(o.footerText, d.footerText),
+    skipFirstPage: bool(o.skipFirstPage, d.skipFirstPage),
+  }
 }
 
 // Base page margins at a 100% "Page margin" slider. Must match the screen

@@ -11,6 +11,14 @@ import {
 } from '@/components/print-document'
 import { SAMPLE_MARKDOWN } from '@/lib/sample-markdown'
 import { useLocalStorage } from '@/hooks/use-local-storage'
+import {
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_THEME,
+  bool,
+  normalizePageSize,
+  normalizeTheme,
+  normalizeTypography,
+} from '@/lib/settings'
 import { useHotkeys, isTextField } from '@/hooks/use-hotkeys'
 import { useIsClient, useMediaQuery } from '@/hooks/use-media-query'
 import { SourceEditor } from '@/components/source-editor'
@@ -85,13 +93,17 @@ const THEMES: {
   { id: 'minimal', label: 'Minimal', description: 'Clean sans-serif', icon: Minus },
 ]
 
+// Stored settings are validated on every read (see lib/settings.ts).
+const normalizeTypo = (v: unknown) => normalizeTypography(v, DEFAULT_TYPOGRAPHY)
+const normalizeKeepHistory = (v: unknown) => bool(v, true)
+
 export default function Page() {
   // Markdown is intentionally NOT persisted — every reload starts with a clean,
   // blinking-caret page so it's obvious you can paste/type fresh content.
   const [markdown, setMarkdown] = useState<string>('')
-  const [pageSize, setPageSize] = useLocalStorage<PageSize>('pp:pageSize', 'letter')
-  const [theme, setTheme] = useLocalStorage<Theme>('pp:theme', 'scientific')
-  const [typography, setTypography] = useLocalStorage<TypographySettings>('pp:typo', DEFAULT_TYPOGRAPHY)
+  const [pageSize, setPageSize] = useLocalStorage<PageSize>('pp:pageSize', DEFAULT_PAGE_SIZE, normalizePageSize)
+  const [theme, setTheme] = useLocalStorage<Theme>('pp:theme', DEFAULT_THEME, normalizeTheme)
+  const [typography, setTypography] = useLocalStorage<TypographySettings>('pp:typo', DEFAULT_TYPOGRAPHY, normalizeTypo)
   const [showSidebar, setShowSidebar] = useState(true)
   const [pasteFlash, setPasteFlash] = useState(false)
   const pasteFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -164,7 +176,7 @@ export default function Page() {
   const splitZoom = sectionWidth ? Math.min(1, ((sectionWidth - 24) / 2 - 8) / pagePx) : 1
 
   // ---- Local history (IndexedDB) ----
-  const [keepHistory, setKeepHistory] = useLocalStorage<boolean>('pp:keepHistory', true)
+  const [keepHistory, setKeepHistory] = useLocalStorage<boolean>('pp:keepHistory', true, normalizeKeepHistory)
   const [history, setHistory] = useState<{ entries: HistoryEntry[]; now: number } | null>(null)
   const [offerClearHistory, setOfferClearHistory] = useState(false)
   const [docId, setDocId] = useState<string | null>(null)
@@ -349,8 +361,11 @@ export default function Page() {
   // Print engine: @page size + margins (scaled by the Page margin slider) and
   // margin-box page numbers / header / footer, injected as
   // <style id="pp-page-size-style">. See lib/print-settings.ts.
-  const [storedPrint, setPrintSettings] = useLocalStorage<PrintSettings>(PRINT_STORAGE_KEY, DEFAULT_PRINT)
-  const printSettings = useMemo(() => normalizePrintSettings(storedPrint), [storedPrint])
+  const [printSettings, setPrintSettings] = useLocalStorage<PrintSettings>(
+    PRINT_STORAGE_KEY,
+    DEFAULT_PRINT,
+    normalizePrintSettings,
+  )
   const marginBoxes = useMarginBoxSupport()
   const docTitle = useMemo(() => markdown.match(/^#\s+(.+?)\s*$/m)?.[1]?.trim() ?? null, [markdown])
   usePrintStyles({
