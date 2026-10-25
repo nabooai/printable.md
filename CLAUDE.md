@@ -68,8 +68,9 @@ sheet are estimates from content height (`PageFurnitureOverlay`) and are labelle
 **Pages view (`components/pages-view.tsx`, `lib/paged/`):** real pages via Paged.js (`pagedjs` 0.4.3,
 pinned; lazy-loaded with `import()` only when the view opens — its own ~96 KB gzip chunk).
 - A deep clone of `#print-root .print-stage` (never the React DOM; ids prefixed `pg-`) is wrapped in
-  `.pp-scope` and paginated into an invisible, unscaled staging host; finished pages move into the
-  live host, which is scaled with `transform` (never `zoom`: zoom re-lays out text) to fit the column.
+  `.pp-scope` and paginated into an invisible, unscaled staging buffer; when done it becomes the live
+  buffer by flipping `data-live` (no DOM move, no relayout), scaled with `transform` (never `zoom`:
+  zoom re-lays out text) to fit the column.
 - CSS given to Paged.js is built from the loaded stylesheets through the CSSOM
   (`lib/paged/content-css.ts`): style rules + `@media print` rules flattened in place (the print
   cascade), every selector prefixed `.pp-scope `, layers/screen-only rules skipped, rules matching
@@ -88,6 +89,14 @@ pinned; lazy-loaded with `import()` only when the view opens — its own ~96 KB 
 - Tables: `lib/paged/paginate.ts` measures each table once and pins its column widths (`<colgroup>`
   + `table-layout: fixed`), because Paged.js lays out each page's fragment as its own table, and
   re-inserts `<thead>` on continuation pages (Paged.js 0.4 drops it; native print repeats it).
+- Paged.js 0.4 bugs worked around in `lib/paged/paginate.ts` (hooks, no fork): whitespace-only text
+  between inline elements was dropped on continuation pages (glued `def` lines in code); a line
+  overflowing into Paged.js's off-page column could be skipped (text missing from preview *and*
+  print) — the page's break token is moved back to the first overflowing character; its re-added
+  hyphen at a split word is U+002D (its default U+2011 falls back to another font and can rewrap).
+  `.pages-view[data-overflow]` lists pages that still lost text (should be empty).
+- Header/footer/page numbers sit on the inner side of the 0.5in edge band (~8-11mm from the paper
+  edge) in both paths; centred at 0.25in they were clipped by laser printers' unprintable border.
 - Paged.js is aliased to its prebuilt `dist/paged.esm.js` in `next.config.mjs` (its source entry's
   CommonJS deps break under Turbopack). Its breaks differ from Chrome's native ones (no
   orphans/widows), so Pages and Preview's dashed guides can disagree, but Pages == print by
