@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   PrintDocument,
   type Theme,
@@ -10,6 +10,19 @@ import {
 } from '@/components/print-document'
 import { SAMPLE_MARKDOWN } from '@/lib/sample-markdown'
 import { useLocalStorage } from '@/hooks/use-local-storage'
+import {
+  PageFurnitureOverlay,
+  PageFurnitureSection,
+  useMarginBoxSupport,
+  usePrintStyles,
+} from '@/components/page-furniture'
+import {
+  DEFAULT_PRINT,
+  PRINT_STORAGE_KEY,
+  hasFurniture,
+  normalizePrintSettings,
+  type PrintSettings,
+} from '@/lib/print-settings'
 import {
   Printer,
   FileText,
@@ -114,19 +127,21 @@ export default function Page() {
     document.title = firstHeading ? `${firstHeading} | PRINTABLE.md` : 'PRINTABLE.md'
   }, [markdown])
 
-  // Set @page size at print time based on selection
-  useEffect(() => {
-    const styleId = 'pp-page-size-style'
-    let el = document.getElementById(styleId) as HTMLStyleElement | null
-    if (!el) {
-      el = document.createElement('style')
-      el.id = styleId
-      document.head.appendChild(el)
-    }
-    el.textContent = `@media print { @page { size: ${pageSize === 'a4' ? 'A4' : 'letter'}; margin: ${
-      pageSize === 'a4' ? '22mm 24mm' : '0.85in 0.95in'
-    }; } }`
-  }, [pageSize])
+  // Print engine: @page size + margins (scaled by the Page margin slider) and
+  // margin-box page numbers / header / footer, injected as
+  // <style id="pp-page-size-style">. See lib/print-settings.ts.
+  const [storedPrint, setPrintSettings] = useLocalStorage<PrintSettings>(PRINT_STORAGE_KEY, DEFAULT_PRINT)
+  const printSettings = useMemo(() => normalizePrintSettings(storedPrint), [storedPrint])
+  const marginBoxes = useMarginBoxSupport()
+  const docTitle = useMemo(() => markdown.match(/^#\s+(.+?)\s*$/m)?.[1]?.trim() ?? null, [markdown])
+  usePrintStyles({
+    pageSize,
+    marginScale: typography.pageMargin,
+    settings: printSettings,
+    docTitle,
+    theme,
+    marginBoxes,
+  })
 
   const handlePrint = () => window.print()
 
@@ -307,6 +322,13 @@ export default function Page() {
                 </label>
               </div>
 
+              {/* Header & footer (page numbers, running header, footer) */}
+              <PageFurnitureSection
+                settings={printSettings}
+                onChange={setPrintSettings}
+                supported={marginBoxes}
+              />
+
               {/* Typography knobs */}
               <div className="border-b p-4" style={{ borderColor: 'var(--border)' }}>
                 <div className="mb-3 flex items-center justify-between">
@@ -459,6 +481,17 @@ export default function Page() {
               pageSize={pageSize}
               theme={theme}
               typography={typography}
+              overlay={
+                isEmpty ? null : (
+                  <PageFurnitureOverlay
+                    settings={printSettings}
+                    pageSize={pageSize}
+                    marginScale={typography.pageMargin}
+                    docTitle={docTitle}
+                    showFurniture={marginBoxes}
+                  />
+                )
+              }
               onMarkdownChange={(md) => {
                 setMarkdown(md)
                 flashPaste()
@@ -469,7 +502,11 @@ export default function Page() {
             className="no-print mt-6 text-center text-xs italic"
             style={{ color: 'var(--muted-foreground)' }}
           >
-            {'Tip: in your print dialog, enable "Headers and footers" if you want page numbers.'}
+            {!marginBoxes
+              ? 'Tip: in your print dialog, enable "Headers and footers" if you want page numbers.'
+              : hasFurniture(printSettings, docTitle)
+                ? 'Page numbers, header and footer come from the sidebar; the print dialog\'s "Headers and footers" option isn\'t needed. Dashed lines mark approximate page breaks.'
+                : 'Tip: turn on page numbers or a header/footer in the sidebar. Dashed lines mark approximate page breaks.'}
           </div>
         </section>
       </div>
