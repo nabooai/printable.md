@@ -7,10 +7,15 @@ Next.js 16 / React 19 / Tailwind 4 app, built as a static export.
 
 ## Layout
 
-- `app/page.tsx` — shell: sidebar (themes, page size, typography), paste handling, print.
-- `components/print-document.tsx` — markdown rendering (react-markdown + remark-gfm + rehype-highlight), empty-state editor.
+- `app/page.tsx` — shell: sidebar (themes, page size, typography, document, recent), view modes
+  (Preview / Source / Split), paste/open/drop handling, undo of whole-document replacements, shortcuts, print.
+- `components/print-document.tsx` — markdown rendering (react-markdown + remark-gfm + rehype-highlight).
+  `#print-root` stays mounted in every view mode (hidden on screen in Source) so printing always prints it.
+- `components/source-editor.tsx` — plain `<textarea>` markdown source editor.
+- `lib/history.ts` — recent documents in IndexedDB (device-local, last 30; no-ops when IndexedDB is unavailable).
 - `app/globals.css` — all theme CSS, print CSS (`@media print`), typography overrides at the end.
-- `hooks/use-local-storage.ts` — settings persistence (markdown itself is not persisted).
+- `hooks/use-local-storage.ts` — settings persistence. The open document is not restored on reload
+  (clean start); past documents are one click away in the Recent list.
 - `.claude/skills/printable/` — Claude Code skill; `render.py` carries a hand-copied subset of the Minimal theme CSS. Keep it in sync when changing base prose/table/code styles.
 
 ## Commands
