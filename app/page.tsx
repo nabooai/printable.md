@@ -7,9 +7,11 @@ import {
   type Theme,
   type PageSize,
   type TypographySettings,
+  type TextAlign,
   DEFAULT_TYPOGRAPHY,
 } from '@/components/print-document'
 import { SAMPLE_MARKDOWN } from '@/lib/sample-markdown'
+import { documentTitle } from '@/lib/title'
 import { useLocalStorage } from '@/hooks/use-local-storage'
 import { sanitizeFilename } from '@/lib/filename'
 import {
@@ -368,7 +370,7 @@ export default function Page() {
 
   // Update document.title from first heading
   useEffect(() => {
-    const firstHeading = markdown.match(/^#\s+(.+?)\s*$/m)?.[1]?.trim()
+    const firstHeading = documentTitle(markdown)
     document.title = firstHeading ? `${firstHeading} | PRINTABLE.md` : 'PRINTABLE.md'
   }, [markdown])
 
@@ -381,7 +383,7 @@ export default function Page() {
     normalizePrintSettings,
   )
   const marginBoxes = useMarginBoxSupport()
-  const docTitle = useMemo(() => markdown.match(/^#\s+(.+?)\s*$/m)?.[1]?.trim() ?? null, [markdown])
+  const docTitle = useMemo(() => documentTitle(markdown), [markdown])
   usePrintStyles({
     pageSize,
     marginScale: typography.pageMargin,
@@ -410,7 +412,7 @@ export default function Page() {
     const blob = new Blob([markdown], { type: 'text/markdown' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    const firstHeading = markdown.match(/^#\s+(.+?)\s*$/m)?.[1] ?? 'document'
+    const firstHeading = documentTitle(markdown) ?? 'document'
     a.href = url
     a.download = `${sanitizeFilename(firstHeading)}.md`
     a.style.display = 'none'
@@ -687,13 +689,19 @@ export default function Page() {
                   />
                   <div role="group" aria-label="Text options" className="flex flex-wrap gap-3 pt-1">
                     <label className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--ink)' }}>
-                      <input
-                        type="checkbox"
-                        checked={typography.justify}
-                        onChange={(e) => updateTypo('justify', e.target.checked)}
-                        className="h-3.5 w-3.5"
-                      />
-                      Justify
+                      Align
+                      <select
+                        value={typography.align ?? 'theme'}
+                        onChange={(e) =>
+                          updateTypo('align', e.target.value === 'theme' ? undefined : (e.target.value as TextAlign))
+                        }
+                        className="rounded border bg-transparent px-1 py-0.5 text-xs"
+                        style={{ borderColor: 'var(--border)' }}
+                      >
+                        <option value="theme">Theme default</option>
+                        <option value="justify">Justify</option>
+                        <option value="left">Left</option>
+                      </select>
                     </label>
                     <label className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--ink)' }}>
                       <input
