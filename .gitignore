@@ -1,15 +1,22 @@
-# v0 sandbox internal files
-__v0_runtime_loader.js
-__v0_devtools.tsx
-__v0_jsx-dev-runtime.ts
-.snowflake/
-.v0-trash/
-.vercel/
+# Dependencies
+node_modules
+
+# Next.js
+.next/
+out/
+*.tsbuildinfo
 
 # Environment variables
 .env*.local
 
-# Common ignores
-node_modules
-.next/
+# Vercel
+.vercel/
+
+# Python (skill renderer)
+__pycache__/
+
+# Claude Code worktrees
+.claude/worktrees/
+
+# OS
 .DS_Store

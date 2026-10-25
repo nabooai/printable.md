@@ -1,7 +1,11 @@
 {
-  "name": "my-project",
+  "name": "printable-md",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.5.1",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

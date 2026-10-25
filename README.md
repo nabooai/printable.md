@@ -1,33 +1,39 @@
-# v0-markdown-to-printable
+# printable.md
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [v0](https://v0.app).
+Paste markdown, get a beautifully typeset page you can print or save as PDF.
 
-## Built with v0
+Paste anywhere on the page (Cmd/Ctrl+V) or type straight into the document.
+GitHub-flavoured markdown is supported (tables, task lists, strikethrough),
+with syntax-highlighted code blocks. Pick a page size (US Letter or A4), tune
+the typography (font scale, line height, spacing, margins, justification,
+hyphenation), then hit Print. Settings are remembered in `localStorage`.
 
-This repository is linked to a [v0](https://v0.app) project. You can continue developing by visiting the link below -- start new chats to make changes, and v0 will push commits directly to this repo. Every merge to `main` will automatically deploy.
+## Themes
 
-[Continue working on v0 →](https://v0.app/chat/projects/prj_WX3ulcgkKItRMwfGtJFvsF0Oywd2)
+Scientific, Editorial, Magazine, Newspaper, Hipster, Technical, Scholarly,
+Modernist, Brutalist, Zine, Manuscript and Minimal.
 
-## Getting Started
+## Development
 
-First, run the development server:
+Requires Node 22+ and pnpm.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+pnpm install
+pnpm dev     # http://localhost:3000
+pnpm build   # production build (type errors fail the build)
+pnpm lint    # ESLint (eslint-config-next)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Code lives in `app/` (page, layout, theme CSS in `globals.css`),
+`components/print-document.tsx`, `hooks/` and `lib/`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Claude Code skill
 
-## Learn More
+`.claude/skills/printable/` is a [Claude Code](https://claude.com/claude-code)
+skill that renders a local `.md` file in the Minimal style as a standalone
+HTML page and opens it in the browser for viewing or printing. See its
+`SKILL.md` for usage.
 
-To learn more, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
+Originally bootstrapped with [v0](https://v0.app).

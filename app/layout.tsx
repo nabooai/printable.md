@@ -65,7 +65,6 @@ const archivoBlack = Archivo_Black({
 export const metadata: Metadata = {
   title: 'Nisism Print',
   description: 'Turn plain markdown into a beautifully typeset, printable document.',
-  generator: 'v0.app',
 }
 
 export default function RootLayout({
