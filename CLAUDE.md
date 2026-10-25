@@ -16,6 +16,10 @@ Next.js 16 / React 19 / Tailwind 4 app, built as a static export.
 - `app/globals.css` — all theme CSS, print CSS (`@media print`), typography overrides at the end.
 - `hooks/use-local-storage.ts` — settings persistence. The open document is not restored on reload
   (clean start); past documents are one click away in the Recent list.
+- `scripts/write-headers.mjs` — runs after `next build` (part of `pnpm build`): writes `out/_headers`
+  (Cloudflare Pages response headers) with a CSP that allows Next's inline scripts by sha256 hash,
+  plus Referrer-Policy, nosniff, COOP, Permissions-Policy. Check locally with
+  `pnpm exec wrangler pages dev out --port <port>` (it applies `_headers`).
 - `.claude/skills/printable/` — Claude Code skill; `render.py` carries a hand-copied subset of the Minimal theme CSS. Keep it in sync when changing base prose/table/code styles.
 
 ## Commands

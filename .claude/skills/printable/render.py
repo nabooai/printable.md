@@ -2,22 +2,29 @@
 """Render a markdown file in printable.md "Minimal" style, then open it to view/print.
 
 Usage:
-  render.py <file.md> [--a4] [--print]
-    --a4      A4 page size (default: US Letter)
-    --print   auto-open the browser print dialog on load
-    --selftest  run the leading-title parser self-check
+  render.py <file.md> [--a4] [--print] [--no-open] [--allow-remote-images]
+    --a4                   A4 page size (default: US Letter)
+    --print                auto-open the browser print dialog on load
+    --no-open              write the HTML and print its path, but don't open it
+    --allow-remote-images  let http(s) images load (default: blocked, so a
+                           rendered doc can't phone home)
+  render.py --selftest     run the parser + security self-checks
 
-Markdown -> HTML is done offline (pandoc, falling back to python-markdown).
-Syntax colors are added client-side by highlight.js from a CDN (degrades to
-plain code blocks when offline). Styling is the printable.md "Minimal" theme.
+Fully offline and self-contained: markdown -> HTML via pandoc (GFM, with
+pandoc's own syntax highlighting), falling back to python-markdown (no
+highlighting). Raw HTML in the markdown is sanitized (only attribute-less
+formatting tags like <kbd>/<sub>/<sup>/<details> survive), unsafe link schemes
+are neutralized, and a strict Content-Security-Policy blocks scripts, network
+requests and remote images. Relative local images are embedded as data: URIs.
+Output goes to a fresh private (0600) file in the temp dir.
 """
-import sys, os, re, html, base64, tempfile, subprocess, webbrowser
+import sys, os, re, json, html, base64, hashlib, tempfile, subprocess, webbrowser
+from urllib.parse import unquote
 
 # CSS lifted from printable.md globals.css: page-paper + base prose + the
-# Minimal theme (with the app's typography-knob defaults baked in) + the
-# highlight.js token palette. Fonts mirror the live site: Source Serif 4 body,
-# JetBrains Mono code (the app's @theme maps --font-sans onto the serif chain,
-# so "Minimal" actually renders serif — matched here on purpose).
+# Minimal theme (with the app's typography-knob defaults baked in). Fonts are
+# local only (no web-font fetch): Source Serif 4 / JetBrains Mono when installed,
+# else Georgia / the system monospace.
 CSS = r"""
 :root{
   --paper:oklch(1 0 0);--ink:oklch(0.18 0.01 60);--rule:oklch(0.85 0.01 60);
@@ -88,15 +95,31 @@ body{background:var(--workbench);}
 }
 """
 
+# pandoc's syntax-highlighting token classes (skylighting), colored with the
+# Minimal theme's highlight.js palette from globals.css.
+HIGHLIGHT_CSS = r"""
+pre>code.sourceCode{white-space:pre;}
+code.sourceCode>span{color:inherit;text-decoration:inherit;}
+div.sourceCode{margin:1.1em 0;}
+div.sourceCode>pre{margin:0;}
+code span.co,code span.do,code span.an,code span.cv,code span.in,code span.wa{color:oklch(0.55 0.02 60);font-style:italic;}
+code span.kw,code span.cf,code span.im,code span.bu,code span.ot,code span.pp,code span.ex{color:oklch(0.4 0.15 280);}
+code span.st,code span.ch,code span.vs,code span.ss,code span.sc,code span.at{color:oklch(0.45 0.13 145);}
+code span.dv,code span.bn,code span.fl,code span.cn{color:oklch(0.5 0.15 35);}
+code span.fu,code span.dt{color:oklch(0.4 0.15 250);font-weight:600;}
+code span.va{color:oklch(0.45 0.15 35);}
+code span.al,code span.er{color:oklch(0.5 0.2 25);font-weight:700;}
+@media print{pre>code.sourceCode{white-space:pre-wrap;}}
+"""
+
 TEMPLATE = r"""<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="__CSP__">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>__DOCTITLE__</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400;1,8..60,700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>__CSS__</style>
 </head>
 <body>
@@ -110,14 +133,183 @@ __BODY__
     </div>
   </article>
 </div>
-<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/highlight.min.js"></script>
-<script>
-if (window.hljs) document.querySelectorAll('pre code').forEach(function(el){try{hljs.highlightElement(el)}catch(e){}});
-__AUTOPRINT__
-</script>
+__SCRIPT__
 </body>
 </html>
 """
+
+AUTOPRINT_JS = "setTimeout(function(){window.print()},500);"
+
+# ---------------------------------------------------------------------------
+# Raw-HTML sanitizer. Markdown may embed raw HTML; a hostile README could use it
+# to run script or exfiltrate the document. Everything that is not an
+# attribute-less tag from this allowlist is removed (text between tags is kept,
+# with any stray '<' / '>' escaped). Shared by the pandoc and fallback paths.
+# ---------------------------------------------------------------------------
+ALLOWED_TAGS = frozenset("""
+    kbd sub sup b i u s em strong small mark del ins abbr cite q dfn var samp
+    code pre tt br wbr hr p div span blockquote center details summary
+    ul ol li dl dt dd h1 h2 h3 h4 h5 h6
+    table caption thead tbody tfoot tr th td
+""".split())
+VOID_TAGS = frozenset(("br", "wbr", "hr"))
+# Elements whose whole content is dropped, not just the tags.
+_DROP_WITH_CONTENT = re.compile(
+    r"<(script|style|textarea|title|xmp|iframe|noembed|noframes|noscript|"
+    r"template|plaintext|object|embed|svg|math|select)\b[^>]*>.*?</\1\s*>",
+    re.I | re.S)
+_TOKEN = re.compile(r"(<!--.*?(?:-->|\Z)|<[!?][^>]*>?|</?[A-Za-z][^>]*>?)", re.S)
+_TAGNAME = re.compile(r"<(/?)([A-Za-z][A-Za-z0-9]*)")
+
+
+def sanitize_html(s):
+    s = _DROP_WITH_CONTENT.sub("", s)
+    out = []
+    for i, tok in enumerate(_TOKEN.split(s)):
+        if i % 2 == 0:                       # text between tags
+            out.append(tok.replace("<", "&lt;").replace(">", "&gt;"))
+            continue
+        m = _TAGNAME.match(tok)
+        if not m:                            # comment, doctype, PI
+            continue
+        slash, name = m.group(1), m.group(2).lower()
+        if name in ALLOWED_TAGS and not (slash and name in VOID_TAGS):
+            out.append("<%s%s>" % (slash, name))
+    return "".join(out)
+
+
+# ---------------------------------------------------------------------------
+# URL neutralization on the generated HTML (both converters emit double-quoted
+# attributes; raw HTML has no attributes left after sanitize_html).
+# ---------------------------------------------------------------------------
+SAFE_HREF_SCHEMES = ("http", "https", "mailto", "tel")
+_SCHEME = re.compile(r"^([A-Za-z][A-Za-z0-9+.\-]*):")
+_URL_ATTR = re.compile(r'(\s(href|src)=)"([^"]*)"')
+_IMG_TYPES = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+              ".gif": "image/gif", ".webp": "image/webp", ".svg": "image/svg+xml",
+              ".avif": "image/avif"}
+_MAX_IMG = 15 * 1024 * 1024
+
+
+def _url_scheme(value):
+    u = html.unescape(value)
+    u = re.sub(r"[\x00-\x20\x7f]", "", u)    # browsers ignore these in schemes
+    m = _SCHEME.match(u)
+    return (m.group(1).lower() if m else None), u
+
+
+def embed_local_image(url, base_dir):
+    """Relative image path under the markdown file's directory -> data: URI."""
+    if not base_dir:
+        return None
+    rel = unquote(url.split("#", 1)[0].split("?", 1)[0])
+    if not rel or rel.startswith("/"):
+        return None
+    root = os.path.realpath(base_dir)
+    p = os.path.realpath(os.path.join(root, rel))
+    mime = _IMG_TYPES.get(os.path.splitext(p)[1].lower())
+    if (not mime or not p.startswith(root + os.sep) or not os.path.isfile(p)
+            or os.path.getsize(p) > _MAX_IMG):
+        return None
+    with open(p, "rb") as f:
+        return "data:%s;base64,%s" % (mime, base64.b64encode(f.read()).decode())
+
+
+def neutralize_urls(fragment, base_dir=None):
+    def fix(m):
+        prefix, attr, value = m.group(1), m.group(2), m.group(3)
+        scheme, url = _url_scheme(value)
+        if attr == "href":
+            if scheme is None or scheme in SAFE_HREF_SCHEMES:
+                return m.group(0)
+            return prefix + '"#"'
+        # src (images)
+        if scheme in ("http", "https"):
+            return m.group(0)                # CSP decides (blocked by default)
+        if scheme == "data" and url[5:].lower().startswith("image/"):
+            return m.group(0)
+        if scheme is None:
+            data = embed_local_image(url, base_dir)
+            if data:
+                return prefix + '"%s"' % data
+        return prefix + '""'
+    return _URL_ATTR.sub(fix, fragment)
+
+
+# ---------------------------------------------------------------------------
+# Markdown -> HTML
+# ---------------------------------------------------------------------------
+def _sanitize_ast(node):
+    """Sanitize every RawBlock/RawInline in a pandoc JSON AST, in place.
+    (Note: `-f gfm-raw_html` does NOT stop pandoc's commonmark reader from
+    passing raw HTML through, so this walk is what actually protects us.)"""
+    if isinstance(node, dict):
+        if node.get("t") in ("RawBlock", "RawInline"):
+            fmt, text = node["c"]
+            node["c"] = ["html", sanitize_html(text) if fmt in ("html", "html5") else ""]
+            return
+        for v in node.values():
+            _sanitize_ast(v)
+    elif isinstance(node, list):
+        for v in node:
+            _sanitize_ast(v)
+
+
+# pandoc's empty per-line anchors in highlighted code (<a href="#cb1-1" ...></a>).
+_LINE_ANCHOR = re.compile(r'<a href="#cb\d+-\d+" aria-hidden="true" tabindex="-1"></a>')
+
+
+def to_html_pandoc(md):
+    ast = json.loads(subprocess.run(
+        ["pandoc", "-f", "gfm", "-t", "json"],
+        input=md, capture_output=True, text=True, check=True).stdout)
+    _sanitize_ast(ast)
+    out = subprocess.run(
+        ["pandoc", "-f", "json", "-t", "html", "--wrap=none"],
+        input=json.dumps(ast), capture_output=True, text=True, check=True).stdout
+    return _LINE_ANCHOR.sub("", out)
+
+
+def to_html_markdown(md):
+    import markdown  # ponytail: stdlib has no md parser; this is the installed fallback
+    from markdown.postprocessors import RawHtmlPostprocessor
+
+    class SanitizingRawHtml(RawHtmlPostprocessor):
+        # Every raw-HTML chunk python-markdown stashed (inline tags, HTML blocks)
+        # passes through here on its way back into the output.
+        def stash_to_string(self, text):
+            return sanitize_html(str(text))
+
+    # Not "extra": its attr_list lets markdown set arbitrary attributes
+    # ({: onclick=...}) and md_in_html re-enables raw HTML parsing.
+    md_ = markdown.Markdown(extensions=["abbr", "def_list", "fenced_code",
+                                        "footnotes", "tables", "sane_lists"])
+    md_.postprocessors.register(SanitizingRawHtml(md_), "raw_html", 30)
+    return md_.convert(md)
+
+
+def to_html(md, base_dir=None, force_fallback=None):
+    """Markdown -> sanitized HTML fragment. pandoc (best GFM fidelity), else
+    python-markdown."""
+    if force_fallback is None:
+        force_fallback = os.environ.get("PRINTABLE_FORCE_FALLBACK") == "1"
+    frag = None
+    if not force_fallback:
+        try:
+            frag = to_html_pandoc(md)
+        except (FileNotFoundError, subprocess.CalledProcessError):
+            pass
+    if frag is None:
+        frag = to_html_markdown(md)
+    return neutralize_urls(frag, base_dir)
+
+
+def csp_for(script, remote_images=False):
+    script_src = ("'sha256-%s'" % base64.b64encode(
+        hashlib.sha256(script.encode()).digest()).decode()) if script else "'none'"
+    img = "data:" + (" https: http:" if remote_images else "")
+    return ("default-src 'none'; script-src %s; style-src 'unsafe-inline'; "
+            "img-src %s; base-uri 'none'; form-action 'none'" % (script_src, img))
 
 
 def extract_title(md):
@@ -130,15 +322,86 @@ def extract_title(md):
     return m.group(1).strip(), t[m.end():].lstrip("\n")
 
 
-def to_html(md):
-    """Markdown -> HTML fragment. pandoc (best GFM fidelity), else python-markdown."""
-    try:
-        return subprocess.run(
-            ["pandoc", "-f", "gfm", "-t", "html", "--wrap=none", "--no-highlight"],
-            input=md, capture_output=True, text=True, check=True).stdout
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        import markdown  # ponytail: stdlib has no md parser; this is the installed fallback
-        return markdown.markdown(md, extensions=["extra", "sane_lists"])
+def build_page(md, name, a4=False, autoprint=False, remote_images=False,
+               base_dir=None, force_fallback=None):
+    title, body = extract_title(md)
+    header = ""
+    if title:
+        header = '      <header class="doc-header"><h1 class="doc-title">{}</h1></header>'.format(
+            html.escape(title))
+    pagerule = "size:A4;margin:22mm 24mm;" if a4 else "size:letter;margin:0.85in 0.95in;"
+    script = AUTOPRINT_JS if autoprint else ""
+    # Fill __BODY__ last so document text can't inject template placeholders.
+    return (TEMPLATE
+            .replace("__CSP__", csp_for(script, remote_images))
+            .replace("__CSS__", CSS.replace("__PAGERULE__", pagerule) + HIGHLIGHT_CSS)
+            .replace("__SIZE__", "a4" if a4 else "letter")
+            .replace("__DOCTITLE__", html.escape(title or name))
+            .replace("__SCRIPT__", "<script>%s</script>" % script if script else "")
+            .replace("__HEADER__", header)
+            .replace("__BODY__", to_html(body, base_dir, force_fallback)))
+
+
+def write_private(page, src_path):
+    """Write to a fresh, unpredictable, 0600 file in the temp dir."""
+    stem = os.path.splitext(os.path.basename(src_path))[0]
+    prefix = (re.sub(r"[^A-Za-z0-9._-]", "_", stem)[:60] or "doc") + "-"
+    fd, out = tempfile.mkstemp(suffix=".printable.html", prefix=prefix)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:   # mkstemp: O_EXCL, mode 0600
+        f.write(page)
+    return out
+
+
+EVIL_MD = """# Title <script>t()</script>
+
+hi <kbd>Ctrl</kbd> H<sub>2</sub>O x<sup>2</sup> <b onclick="x()">bold</b>
+
+<script>alert('blk')</script>
+
+inline <script>alert('inl')</script> and <img src=x onerror="alert('img')">
+
+<iframe src="file:///etc/passwd"></iframe>
+
+<meta http-equiv="refresh" content="0;url=https://evil.example/">
+
+<div align="center"><a href="javascript:alert('raw')">raw</a></div>
+
+<details><summary>More</summary>
+
+hidden **md**
+
+</details>
+
+[e2](&#106;avascript:alert(1)) [e3](javascript&colon;alert(1)) [js](javascript:alert('md')) [jsws]( JaVaScRiPt:alert(1)) [ent](jav&#x09;ascript:alert(1))
+[data](data:text/html,<script>alert(1)</script>) [file](file:///etc/passwd)
+[ok](https://example.com/a) [mail](mailto:a@b.c) [frag](#title)
+<javascript:alert('auto')>
+
+![remote](https://evil.example/pixel.png) ![local](file:///etc/hosts)
+
+```python
+def f(x):
+    return "<script>"  # c
+```
+
+<!-- <script>alert('comment')</script> -->
+<scr<script>ipt>alert('nest')</script>
+<style>body{display:none}</style>
+"""
+
+
+def _check_fragment(frag, label):
+    low = frag.lower()
+    # (an autolink's visible text may still read "javascript:..."; its href may not)
+    bad = ["<script", "onerror", "onclick", "<iframe", "<meta", '="javascript',
+           "<style", '="data:text', '="file:', "alert('blk')", "alert('comment')"]
+    for b in bad:
+        assert b not in low, "%s: %r survived:\n%s" % (label, b, frag)
+    assert "<kbd>Ctrl</kbd>" in frag and "<sub>2</sub>" in frag and "<sup>2</sup>" in frag, label
+    assert "<details>" in frag and "<summary>More</summary>" in frag, label
+    assert 'href="https://example.com/a"' in frag and 'href="mailto:a@b.c"' in frag, label
+    assert 'href="#title"' in frag, label
+    assert "&lt;script&gt;" in frag, label            # code block content kept, escaped
 
 
 def selftest():
@@ -146,7 +409,49 @@ def selftest():
     assert extract_title("# Hi\n\nbody")[1].strip() == "body"
     assert extract_title("no title\n# later")[0] is None      # H1 not at top
     assert extract_title("﻿  # BOM\n\nx")[0] == "BOM"    # BOM + whitespace
-    print("selftest ok")
+
+    assert sanitize_html('<img src=x onerror=alert(1)>') == ""
+    assert sanitize_html('<kbd class="x">k</kbd>') == "<kbd>k</kbd>"
+    assert sanitize_html('<a href="javascript:x">t</a>') == "t"
+    assert "<" not in sanitize_html("<scr<script>ipt>x").replace("&lt;", "")
+    assert sanitize_html('<img alt="a>b" onerror=y>') == 'b" onerror=y&gt;'
+
+    ran = []
+    try:
+        subprocess.run(["pandoc", "--version"], capture_output=True, check=True)
+        _check_fragment(to_html(EVIL_MD, force_fallback=False), "pandoc")
+        assert 'class="sourceCode' in to_html(EVIL_MD, force_fallback=False)
+        ran.append("pandoc")
+    except FileNotFoundError:
+        print("selftest: pandoc not installed, skipped pandoc path")
+    try:
+        import markdown  # noqa: F401
+        _check_fragment(to_html(EVIL_MD, force_fallback=True), "python-markdown")
+        assert "<h1>h {: onclick=x }</h1>" in to_html("# h {: onclick=x }\n", force_fallback=True)
+        ran.append("python-markdown")
+    except ImportError:
+        print("selftest: python-markdown not installed, skipped fallback path")
+    assert ran, "neither pandoc nor python-markdown is available"
+
+    page = build_page(EVIL_MD, "evil.md", force_fallback=(ran[0] != "pandoc"))
+    csp = re.search(r'http-equiv="Content-Security-Policy" content="([^"]+)"', page)
+    assert csp and page.index(csp.group(0)) < page.index("<title>"), "CSP missing/late"
+    for d in ("default-src 'none'", "script-src 'none'", "img-src data:;",
+              "base-uri 'none'", "form-action 'none'"):
+        assert d in csp.group(1), d
+    assert "<script" not in page and "https://" not in page.split("<body>")[0]
+    assert "googleapis" not in page and "jsdelivr" not in page
+    p2 = build_page("x", "x.md", autoprint=True, force_fallback=(ran[0] != "pandoc"))
+    h = base64.b64encode(hashlib.sha256(AUTOPRINT_JS.encode()).digest()).decode()
+    assert "script-src 'sha256-%s'" % h in p2 and "<script>%s</script>" % AUTOPRINT_JS in p2
+
+    out = write_private("x", "My Doc?.md")
+    try:
+        assert os.stat(out).st_mode & 0o777 == 0o600
+        assert os.path.basename(out).startswith("My_Doc_-")
+    finally:
+        os.unlink(out)
+    print("selftest ok (%s)" % ", ".join(ran))
 
 
 def main(argv):
@@ -156,34 +461,17 @@ def main(argv):
         selftest(); return 0
 
     path = argv[0]
-    a4 = "--a4" in argv
-    autoprint = "--print" in argv
     with open(path, encoding="utf-8") as f:
         md = f.read()
-
-    title, body = extract_title(md)
-    header = ""
-    if title:
-        header = '      <header class="doc-header"><h1 class="doc-title">{}</h1></header>'.format(
-            html.escape(title))
-    doctitle = html.escape(title or os.path.basename(path))
-    pagerule = "size:A4;margin:22mm 24mm;" if a4 else "size:letter;margin:0.85in 0.95in;"
-
-    out_html = (TEMPLATE
-                .replace("__CSS__", CSS.replace("__PAGERULE__", pagerule))
-                .replace("__SIZE__", "a4" if a4 else "letter")
-                .replace("__DOCTITLE__", doctitle)
-                .replace("__HEADER__", header)
-                .replace("__BODY__", to_html(body))
-                .replace("__AUTOPRINT__",
-                         "setTimeout(function(){window.print()},500);" if autoprint else ""))
-
-    out = os.path.join(tempfile.gettempdir(),
-                       os.path.splitext(os.path.basename(path))[0] + ".printable.html")
-    with open(out, "w", encoding="utf-8") as f:
-        f.write(out_html)
+    page = build_page(md, os.path.basename(path),
+                      a4="--a4" in argv, autoprint="--print" in argv,
+                      remote_images="--allow-remote-images" in argv,
+                      base_dir=os.path.dirname(os.path.abspath(path)))
+    out = write_private(page, path)
     print(out)
 
+    if "--no-open" in argv:
+        return 0
     if sys.platform == "darwin":
         subprocess.run(["open", out])
     elif sys.platform.startswith("linux"):
