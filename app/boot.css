@@ -1,0 +1,19 @@
+/* Boot phase for returning users with stored settings (lib/boot-script.ts):
+   hide the parts that render settings until React has applied them, then
+   fade in. Screen only — never affects printing. */
+@media screen {
+  html[data-pp-boot='pending'] aside,
+  html[data-pp-boot='pending'] #print-root {
+    visibility: hidden;
+  }
+  html[data-pp-boot='done'] aside,
+  html[data-pp-boot='done'] #print-root {
+    animation: pp-boot-in 140ms ease-out;
+  }
+}
+
+@keyframes pp-boot-in {
+  from {
+    opacity: 0;
+  }
+}

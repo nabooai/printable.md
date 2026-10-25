@@ -15,6 +15,7 @@ import { sanitizeFilename } from '@/lib/filename'
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_THEME,
+  STORAGE_KEYS,
   bool,
   normalizePageSize,
   normalizeTheme,
@@ -102,9 +103,9 @@ export default function Page() {
   // Markdown is intentionally NOT persisted — every reload starts with a clean,
   // blinking-caret page so it's obvious you can paste/type fresh content.
   const [markdown, setMarkdown] = useState<string>('')
-  const [pageSize, setPageSize] = useLocalStorage<PageSize>('pp:pageSize', DEFAULT_PAGE_SIZE, normalizePageSize)
-  const [theme, setTheme] = useLocalStorage<Theme>('pp:theme', DEFAULT_THEME, normalizeTheme)
-  const [typography, setTypography] = useLocalStorage<TypographySettings>('pp:typo', DEFAULT_TYPOGRAPHY, normalizeTypo)
+  const [pageSize, setPageSize] = useLocalStorage<PageSize>(STORAGE_KEYS.pageSize, DEFAULT_PAGE_SIZE, normalizePageSize)
+  const [theme, setTheme] = useLocalStorage<Theme>(STORAGE_KEYS.theme, DEFAULT_THEME, normalizeTheme)
+  const [typography, setTypography] = useLocalStorage<TypographySettings>(STORAGE_KEYS.typography, DEFAULT_TYPOGRAPHY, normalizeTypo)
   const [showSidebar, setShowSidebar] = useState(true)
   const [pasteFlash, setPasteFlash] = useState(false)
   const pasteFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -177,7 +178,7 @@ export default function Page() {
   const splitZoom = sectionWidth ? Math.min(1, ((sectionWidth - 24) / 2 - 8) / pagePx) : 1
 
   // ---- Local history (IndexedDB) ----
-  const [keepHistory, setKeepHistory] = useLocalStorage<boolean>('pp:keepHistory', true, normalizeKeepHistory)
+  const [keepHistory, setKeepHistory] = useLocalStorage<boolean>(STORAGE_KEYS.keepHistory, true, normalizeKeepHistory)
   const [history, setHistory] = useState<{ entries: HistoryEntry[]; now: number } | null>(null)
   const [offerClearHistory, setOfferClearHistory] = useState(false)
   const [docId, setDocId] = useState<string | null>(null)

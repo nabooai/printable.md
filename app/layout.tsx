@@ -11,6 +11,9 @@ import {
   Archivo_Black,
 } from 'next/font/google'
 import './globals.css'
+import './boot.css'
+import { BOOT_SCRIPT } from '@/lib/boot-script'
+import { BootReady } from '@/components/boot-ready'
 
 const instrumentSerif = Instrument_Serif({
   subsets: ['latin'],
@@ -84,11 +87,17 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="bg-background">
+    // suppressHydrationWarning: the inline boot script may set data-pp-boot
+    // on <html> before React hydrates.
+    <html lang="en" className="bg-background" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
+      </head>
       <body
         className={`${instrumentSerif.variable} ${sourceSerif.variable} ${jetbrainsMono.variable} ${playfair.variable} ${bebas.variable} ${inter.variable} ${fraunces.variable} ${spaceGrotesk.variable} ${archivoBlack.variable} font-sans antialiased`}
       >
         {children}
+        <BootReady />
       </body>
     </html>
   )
