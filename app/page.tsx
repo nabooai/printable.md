@@ -11,6 +11,7 @@ import {
 } from '@/components/print-document'
 import { SAMPLE_MARKDOWN } from '@/lib/sample-markdown'
 import { useLocalStorage } from '@/hooks/use-local-storage'
+import { sanitizeFilename } from '@/lib/filename'
 import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_THEME,
@@ -384,7 +385,7 @@ export default function Page() {
       const text = await navigator.clipboard.readText()
       if (text.trim()) replaceDocument(text)
     } catch {
-      alert('Could not read clipboard. Press Ctrl/Cmd+V anywhere on the page instead.')
+      showToast('Could not read clipboard. Press Ctrl/Cmd+V anywhere on the page instead.')
     }
   }
 
@@ -398,9 +399,12 @@ export default function Page() {
     const a = document.createElement('a')
     const firstHeading = markdown.match(/^#\s+(.+?)\s*$/m)?.[1] ?? 'document'
     a.href = url
-    a.download = `${firstHeading.replace(/\s+/g, '-').toLowerCase().slice(0, 60)}.md`
+    a.download = `${sanitizeFilename(firstHeading)}.md`
+    a.style.display = 'none'
+    document.body.appendChild(a)
     a.click()
-    URL.revokeObjectURL(url)
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   const isEmpty = markdown.trim().length === 0
