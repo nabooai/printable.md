@@ -57,13 +57,16 @@ body{background:var(--workbench);}
 .prose-print li>p{text-indent:0;margin:0;text-align:left;}
 .prose-print hr{border:none;text-align:center;margin:2em 0;break-after:avoid;}
 .prose-print hr::before{content:'\00b7 \00b7 \00b7';letter-spacing:.6em;color:var(--muted-foreground);}
-.prose-print code{font-family:var(--mono);font-size:.88em;background:var(--secondary);padding:.1em .35em;border-radius:3px;border:1px solid var(--border);}
+.prose-print code{font-family:var(--mono);font-size:.88em;background:var(--secondary);padding:.1em .35em;border-radius:3px;border:1px solid var(--border);hyphens:manual;-webkit-hyphens:manual;overflow-wrap:anywhere;}
 .prose-print pre{font-family:var(--mono);font-size:.85em;line-height:1.55;background:var(--secondary);border:1px solid var(--border);border-radius:6px;padding:.9em 1.1em;margin:1.1em 0;break-inside:avoid;white-space:pre;overflow-x:auto;max-width:100%;}
 .prose-print pre code{background:transparent;border:none;padding:0;font-size:inherit;}
 .prose-print blockquote{margin:1em 0;padding:.4em 1em;border-left:3px solid var(--primary);color:var(--muted-foreground);break-inside:avoid;}
 .prose-print blockquote p{margin:0;}
-.prose-print table{width:100%;border-collapse:collapse;margin:1.2em 0;font-size:.92em;break-inside:avoid;}
-.prose-print th,.prose-print td{text-align:left;padding:.45em .7em;border-bottom:1px solid var(--border);}
+.prose-print table{width:100%;border-collapse:collapse;margin:1.2em 0;font-size:.92em;}
+.prose-print thead{display:table-header-group;}
+.prose-print tr{break-inside:avoid;}
+.prose-print th,.prose-print td{text-align:left;padding:.45em .7em;border-bottom:1px solid var(--border);overflow-wrap:break-word;}
+.prose-print td a,.prose-print th a{hyphens:manual;-webkit-hyphens:manual;overflow-wrap:anywhere;}
 .prose-print th{font-weight:700;border-bottom:2px solid var(--ink);}
 .prose-print img{max-width:100%;height:auto;display:block;margin:1.2em auto;break-inside:avoid;}
 
