@@ -1543,11 +1543,23 @@
   .prose-print a {
     color: var(--ink);
   }
-  .prose-print pre,
   .prose-print blockquote,
   .prose-print img,
   .prose-print figure {
     break-inside: avoid;
+  }
+  /* Code on paper: no horizontal scrolling exists, so wrap long lines, and let
+     tall blocks split across pages instead of jumping (gap) or clipping. */
+  .prose-print pre,
+  .prose-print pre code {
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  .prose-print pre {
+    break-inside: auto !important;
   }
 }
 
@@ -1639,6 +1651,14 @@
 }
 .print-stage .page-paper[data-size='a4'] {
   padding: calc(22mm * var(--pp-page-margin)) calc(24mm * var(--pp-page-margin));
+}
+
+/* Code on the sheet wraps like it will on paper (no sideways scrolling), so
+   the preview matches the printout. */
+.print-stage .prose-print pre,
+.print-stage .prose-print pre code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 @media print {
