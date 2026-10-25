@@ -535,11 +535,13 @@ export default function Page() {
               type="button"
               onClick={handlePrint}
               disabled={isEmpty}
-              className="inline-flex min-h-10 items-center gap-2 rounded-md px-4 py-2 text-sm sm:min-h-0 font-semibold shadow-sm transition hover:opacity-90 disabled:opacity-40"
+              aria-label="Print"
+              className="inline-flex min-h-10 min-w-10 items-center justify-center gap-2 rounded-md px-2.5 py-2 text-sm sm:min-h-0 sm:px-4 font-semibold shadow-sm transition hover:opacity-90 disabled:opacity-40"
               style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
             >
               <Printer className="h-4 w-4" aria-hidden="true" />
-              Print
+              {/* Icon only on phones: the header row must fit 390px with four view modes. */}
+              <span className="hidden sm:inline">Print</span>
             </button>
           </div>
         </div>
