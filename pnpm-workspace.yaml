@@ -4,3 +4,6 @@ allowBuilds:
   # wrangler (deploy tooling): install scripts fetch/verify platform binaries.
   esbuild: true
   workerd: true
+  # pagedjs deps (via @babel/polyfill / event-emitter): postinstall only prints a banner.
+  core-js: false
+  es5-ext: false
