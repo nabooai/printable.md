@@ -16,6 +16,7 @@ import {
   DEFAULT_PAGE_SIZE,
   DEFAULT_THEME,
   STORAGE_KEYS,
+  TYPO_RANGES,
   bool,
   normalizePageSize,
   normalizeTheme,
@@ -73,7 +74,9 @@ import {
   PanelLeftOpen,
   FolderOpen,
   Keyboard,
+  Check,
 } from 'lucide-react'
+import { onRadioKeyDown } from '@/lib/roving-radio'
 
 const THEMES: {
   id: Theme
@@ -98,6 +101,7 @@ const THEMES: {
 // Stored settings are validated on every read (see lib/settings.ts).
 const normalizeTypo = (v: unknown) => normalizeTypography(v, DEFAULT_TYPOGRAPHY)
 const normalizeKeepHistory = (v: unknown) => bool(v, true)
+const THEME_IDS = THEMES.map((t) => t.id)
 
 export default function Page() {
   // Markdown is intentionally NOT persisted — every reload starts with a clean,
@@ -145,6 +149,10 @@ export default function Page() {
   }
 
   useEffect(() => {
+    // Don't pull keyboard focus out of the view-mode radio group while the
+    // user arrows through it.
+    const active = document.activeElement
+    if (active?.getAttribute('role') === 'radio' && active.matches(':focus-visible')) return
     if (mode !== 'preview') editorRef.current?.focus()
   }, [mode])
 
@@ -226,6 +234,9 @@ export default function Page() {
   type Snapshot = { markdown: string; docId: string | null; theme: Theme; pageSize: PageSize; mode: ViewMode }
   const undoRef = useRef<Snapshot | null>(null)
   const [toast, setToast] = useState<ToastData | null>(null)
+  // Screen-reader announcement for replacements that don't show a toast
+  // (e.g. pasting into an empty page).
+  const [announcement, setAnnouncement] = useState<{ id: number; text: string } | null>(null)
   const dismissToast = useCallback(() => setToast(null), [])
   const showToast = (message: string, actionLabel?: string) =>
     setToast({ id: Date.now(), message, actionLabel })
@@ -242,6 +253,7 @@ export default function Page() {
     } else {
       undoRef.current = null
       setToast(null)
+      if (next.trim()) setAnnouncement({ id: Date.now(), text: `Document loaded: ${titleFor(next)}` })
     }
     const id = next.trim() ? (opts.id ?? newDocId()) : null
     setDocument(next)
@@ -411,7 +423,13 @@ export default function Page() {
   const isEmpty = markdown.trim().length === 0
 
   return (
-    <main className="min-h-screen">
+    <div className="app-shell min-h-screen">
+      <a href="#document" className="skip-link no-print">
+        Skip to document
+      </a>
+      <div role="status" aria-live="polite" className="sr-only">
+        {announcement && <span key={announcement.id}>{announcement.text}</span>}
+      </div>
       <header
         className="no-print sticky top-0 z-30 border-b backdrop-blur-md"
         style={{
@@ -419,19 +437,31 @@ export default function Page() {
           borderColor: 'var(--border)',
         }}
       >
+        <p id="paste-hint" className="sr-only">
+          Press {mod}V anywhere outside a text field to paste markdown and replace the document, {mod}O to open a
+          file, or use the Paste from clipboard button in the Document section.
+        </p>
         <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-2 px-4 py-3 sm:gap-4 sm:px-6">
           <div className="flex items-center gap-2.5">
             <button
+              type="button"
               onClick={() => setShowSidebar(!showSidebar)}
-              className="flex h-9 w-9 items-center justify-center rounded-md border transition hover:bg-secondary"
+              className="flex h-10 w-10 items-center justify-center rounded-md border transition hover:bg-secondary sm:h-9 sm:w-9"
               style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
-              aria-label="Toggle sidebar"
+              aria-label={showSidebar ? 'Hide settings sidebar' : 'Show settings sidebar'}
+              aria-expanded={showSidebar}
+              aria-controls={showSidebar ? 'settings' : undefined}
             >
-              {showSidebar ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+              {showSidebar ? (
+                <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
+              )}
             </button>
             <div
               className="hidden h-9 w-9 items-center justify-center rounded-md sm:flex"
               style={{ background: 'var(--primary)' }}
+              aria-hidden="true"
             >
               <FileText className="h-5 w-5" style={{ color: 'var(--primary-foreground)' }} />
             </div>
@@ -447,40 +477,48 @@ export default function Page() {
 
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={handlePasteFromClipboard}
+              aria-label="Paste from clipboard"
+              aria-describedby="paste-hint"
               className="hidden items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition hover:bg-secondary sm:inline-flex"
               style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
             >
-              <ClipboardPaste className="h-4 w-4" />
+              <ClipboardPaste className="h-4 w-4" aria-hidden="true" />
               Paste
             </button>
             {!isEmpty && (
               <button
+                type="button"
                 onClick={handleClear}
+                aria-label="Clear document"
                 className="hidden items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition hover:bg-secondary sm:inline-flex"
                 style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4" aria-hidden="true" />
                 Clear
               </button>
             )}
             <button
+              type="button"
               onClick={handleDownloadMd}
               disabled={isEmpty}
+              aria-label="Download .md file"
               className="hidden items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium transition hover:bg-secondary disabled:opacity-40 sm:inline-flex"
               style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-4 w-4" aria-hidden="true" />
               .md
             </button>
             <ViewModeToggle mode={mode} onChange={setViewMode} allowSplit={wide} shortcut={`${mod}E`} />
             <button
+              type="button"
               onClick={handlePrint}
               disabled={isEmpty}
-              className="inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold shadow-sm transition hover:opacity-90 disabled:opacity-40"
+              className="inline-flex min-h-10 items-center gap-2 rounded-md px-4 py-2 text-sm sm:min-h-0 font-semibold shadow-sm transition hover:opacity-90 disabled:opacity-40"
               style={{ background: 'var(--primary)', color: 'var(--primary-foreground)' }}
             >
-              <Printer className="h-4 w-4" />
+              <Printer className="h-4 w-4" aria-hidden="true" />
               Print
             </button>
           </div>
@@ -493,28 +531,36 @@ export default function Page() {
         }`}
       >
         {showSidebar && (
-          <aside className="no-print lg:sticky lg:top-[88px] lg:h-[calc(100vh-104px)]">
+          <aside id="settings" aria-label="Settings" className="no-print lg:sticky lg:top-[88px] lg:h-[calc(100vh-104px)]">
             <div
               className="flex h-full flex-col overflow-y-auto rounded-lg border"
               style={{ borderColor: 'var(--border)', background: 'var(--card)' }}
             >
               {/* Theme picker */}
-              <div className="border-b p-4" style={{ borderColor: 'var(--border)' }}>
-                <div
+              <section aria-labelledby="style-heading" className="border-b p-4" style={{ borderColor: 'var(--border)' }}>
+                <h2
+                  id="style-heading"
                   className="mb-2 text-xs font-medium uppercase tracking-wide"
                   style={{ color: 'var(--muted-foreground)' }}
                 >
                   Style
-                </div>
-                <div className="grid grid-cols-2 gap-2">
+                </h2>
+                <div role="radiogroup" aria-labelledby="style-heading" className="grid grid-cols-2 gap-2">
                   {THEMES.map((t) => {
                     const Icon = t.icon
                     const active = theme === t.id
                     return (
                       <button
                         key={t.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        aria-label={t.label}
+                        aria-describedby={`theme-desc-${t.id}`}
+                        tabIndex={active ? 0 : -1}
                         onClick={() => setTheme(t.id)}
-                        className="flex flex-col items-start gap-1 rounded-md border p-2.5 text-left transition"
+                        onKeyDown={(e) => onRadioKeyDown(e, THEME_IDS, theme, setTheme)}
+                        className="theme-card relative flex flex-col items-start gap-1 rounded-md border p-2.5 text-left transition"
                         style={{
                           borderColor: active ? 'var(--primary)' : 'var(--border)',
                           background: active ? 'var(--accent)' : 'transparent',
@@ -522,18 +568,25 @@ export default function Page() {
                           boxShadow: active ? '0 0 0 1px var(--primary) inset' : 'none',
                         }}
                       >
+                        {active && (
+                          <Check
+                            className="absolute right-2 top-2 h-3.5 w-3.5"
+                            style={{ color: 'var(--primary)' }}
+                            aria-hidden="true"
+                          />
+                        )}
                         <div className="flex items-center gap-1.5 text-sm font-semibold">
-                          <Icon className="h-3.5 w-3.5" />
+                          <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                           {t.label}
                         </div>
-                        <div className="text-xs leading-snug" style={{ color: 'var(--muted-foreground)' }}>
+                        <div id={`theme-desc-${t.id}`} className="text-xs leading-snug" style={{ color: 'var(--muted-foreground)' }}>
                           {t.description}
                         </div>
                       </button>
                     )
                   })}
                 </div>
-              </div>
+              </section>
 
               {/* Page size */}
               <div className="border-b p-4" style={{ borderColor: 'var(--border)' }}>
@@ -564,21 +617,24 @@ export default function Page() {
               />
 
               {/* Typography knobs */}
-              <div className="border-b p-4" style={{ borderColor: 'var(--border)' }}>
+              <section aria-labelledby="typography-heading" className="border-b p-4" style={{ borderColor: 'var(--border)' }}>
                 <div className="mb-3 flex items-center justify-between">
-                  <div
+                  <h2
+                    id="typography-heading"
                     className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide"
                     style={{ color: 'var(--muted-foreground)' }}
                   >
-                    <Sliders className="h-3.5 w-3.5" />
+                    <Sliders className="h-3.5 w-3.5" aria-hidden="true" />
                     Typography
-                  </div>
+                  </h2>
                   <button
+                    type="button"
                     onClick={resetTypo}
+                    aria-label="Reset typography"
                     className="flex items-center gap-1 text-xs hover:underline"
                     style={{ color: 'var(--muted-foreground)' }}
                   >
-                    <RotateCcw className="h-3 w-3" />
+                    <RotateCcw className="h-3 w-3" aria-hidden="true" />
                     Reset
                   </button>
                 </div>
@@ -586,8 +642,8 @@ export default function Page() {
                   <Slider
                     label="Text size"
                     value={typography.fontScale}
-                    min={0.75}
-                    max={1.4}
+                    min={TYPO_RANGES.fontScale.min}
+                    max={TYPO_RANGES.fontScale.max}
                     step={0.05}
                     display={`${Math.round(typography.fontScale * 100)}%`}
                     onChange={(v) => updateTypo('fontScale', v)}
@@ -595,8 +651,8 @@ export default function Page() {
                   <Slider
                     label="Line height"
                     value={typography.lineHeight}
-                    min={1.2}
-                    max={2.2}
+                    min={TYPO_RANGES.lineHeight.min}
+                    max={TYPO_RANGES.lineHeight.max}
                     step={0.05}
                     display={typography.lineHeight.toFixed(2)}
                     onChange={(v) => updateTypo('lineHeight', v)}
@@ -604,8 +660,8 @@ export default function Page() {
                   <Slider
                     label="Paragraph spacing"
                     value={typography.paragraphSpacing}
-                    min={0.5}
-                    max={2}
+                    min={TYPO_RANGES.paragraphSpacing.min}
+                    max={TYPO_RANGES.paragraphSpacing.max}
                     step={0.05}
                     display={`${Math.round(typography.paragraphSpacing * 100)}%`}
                     onChange={(v) => updateTypo('paragraphSpacing', v)}
@@ -613,22 +669,23 @@ export default function Page() {
                   <Slider
                     label="Letter spacing"
                     value={typography.letterSpacing}
-                    min={-0.04}
-                    max={0.08}
+                    min={TYPO_RANGES.letterSpacing.min}
+                    max={TYPO_RANGES.letterSpacing.max}
                     step={0.005}
                     display={`${(typography.letterSpacing * 1000).toFixed(0)}`}
+                    valueText={`${(typography.letterSpacing * 1000).toFixed(0)} thousandths of an em`}
                     onChange={(v) => updateTypo('letterSpacing', v)}
                   />
                   <Slider
                     label="Page margin"
                     value={typography.pageMargin}
-                    min={0.6}
-                    max={1.4}
+                    min={TYPO_RANGES.pageMargin.min}
+                    max={TYPO_RANGES.pageMargin.max}
                     step={0.05}
                     display={`${Math.round(typography.pageMargin * 100)}%`}
                     onChange={(v) => updateTypo('pageMargin', v)}
                   />
-                  <div className="flex flex-wrap gap-3 pt-1">
+                  <div role="group" aria-label="Text options" className="flex flex-wrap gap-3 pt-1">
                     <label className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--ink)' }}>
                       <input
                         type="checkbox"
@@ -649,48 +706,64 @@ export default function Page() {
                     </label>
                   </div>
                 </div>
-              </div>
+              </section>
 
               {/* Document */}
-              <div className="p-4">
-                <div
+              <section aria-labelledby="document-actions-heading" className="p-4">
+                <h2
+                  id="document-actions-heading"
                   className="mb-2 text-xs font-medium uppercase tracking-wide"
                   style={{ color: 'var(--muted-foreground)' }}
                 >
                   Document
-                </div>
+                </h2>
                 <div className="flex flex-col gap-2">
                   <button
+                    type="button"
                     onClick={() => fileInputRef.current?.click()}
                     className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition hover:bg-secondary"
                     style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
                   >
-                    <FolderOpen className="h-4 w-4" />
+                    <FolderOpen className="h-4 w-4" aria-hidden="true" />
                     Open…
                   </button>
                   <button
+                    type="button"
                     onClick={handlePasteFromClipboard}
+                    aria-describedby="paste-hint"
                     className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition hover:bg-secondary"
                     style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
                   >
-                    <ClipboardPaste className="h-4 w-4" />
+                    <ClipboardPaste className="h-4 w-4" aria-hidden="true" />
                     Paste from clipboard
                   </button>
                   <button
+                    type="button"
                     onClick={handleLoadSample}
                     className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition hover:bg-secondary"
                     style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
                   >
-                    <FileText className="h-4 w-4" />
+                    <FileText className="h-4 w-4" aria-hidden="true" />
                     Load sample
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDownloadMd}
+                    disabled={isEmpty}
+                    className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition hover:bg-secondary disabled:opacity-40"
+                    style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
+                  >
+                    <Download className="h-4 w-4" aria-hidden="true" />
+                    Download .md
                   </button>
                   {!isEmpty && (
                     <button
+                      type="button"
                       onClick={handleClear}
                       className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition hover:bg-secondary"
                       style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                       Clear document
                     </button>
                   )}
@@ -699,7 +772,7 @@ export default function Page() {
                   Or just press <kbd className="font-mono">Ctrl/Cmd+V</kbd> anywhere on the page, or drop a
                   file on it. The first <code className="font-mono">#</code> heading becomes the document title.
                 </p>
-              </div>
+              </section>
 
               {history && (
                 <RecentDocuments
@@ -716,14 +789,15 @@ export default function Page() {
                 />
               )}
 
-              <div className="border-t p-4" style={{ borderColor: 'var(--border)' }}>
-                <div
+              <section aria-labelledby="shortcuts-heading" className="border-t p-4" style={{ borderColor: 'var(--border)' }}>
+                <h2
+                  id="shortcuts-heading"
                   className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide"
                   style={{ color: 'var(--muted-foreground)' }}
                 >
-                  <Keyboard className="h-3.5 w-3.5" />
+                  <Keyboard className="h-3.5 w-3.5" aria-hidden="true" />
                   Shortcuts
-                </div>
+                </h2>
                 <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs" style={{ color: 'var(--ink)' }}>
                   {[
                     ['E', 'Preview / Source / Split'],
@@ -743,13 +817,17 @@ export default function Page() {
                     </div>
                   ))}
                 </dl>
-              </div>
+              </section>
             </div>
           </aside>
         )}
 
-        <section
+        <main
           ref={sectionRef}
+          id="document"
+          tabIndex={-1}
+          aria-label="Document"
+          aria-describedby="paste-hint"
           className={`doc-view doc-view--${mode} min-w-0`}
           style={{ '--pp-split-zoom': splitZoom } as React.CSSProperties}
         >
@@ -804,12 +882,14 @@ export default function Page() {
                 ? 'Page numbers, header and footer come from the sidebar; the print dialog\'s "Headers and footers" option isn\'t needed. Keep the dialog\'s Scale at Default so the dashed page-break lines match.'
                 : 'Tip: turn on page numbers or a header/footer in the sidebar. Keep the print dialog\'s Scale at Default so the dashed page-break lines match.'}
           </div>
-        </section>
+        </main>
       </div>
 
       <input
         ref={fileInputRef}
         type="file"
+        aria-label="Open markdown file"
+        tabIndex={-1}
         accept=".md,.markdown,.txt,text/markdown,text/plain"
         className="hidden"
         onChange={(e) => {
@@ -832,7 +912,7 @@ export default function Page() {
         </div>
       )}
       <Toast toast={toast} onAction={undoReplace} onDismiss={dismissToast} />
-    </main>
+    </div>
   )
 }
 
@@ -843,6 +923,7 @@ function Slider({
   max,
   step,
   display,
+  valueText = display,
   onChange,
 }: {
   label: string
@@ -851,13 +932,15 @@ function Slider({
   max: number
   step: number
   display: string
+  /** Spoken value (aria-valuetext); defaults to the displayed value. */
+  valueText?: string
   onChange: (v: number) => void
 }) {
   return (
     <label className="flex flex-col gap-1">
       <div className="flex items-center justify-between text-xs" style={{ color: 'var(--ink)' }}>
         <span>{label}</span>
-        <span className="font-mono tabular-nums" style={{ color: 'var(--muted-foreground)' }}>
+        <span className="font-mono tabular-nums" style={{ color: 'var(--muted-foreground)' }} aria-hidden="true">
           {display}
         </span>
       </div>
@@ -867,6 +950,8 @@ function Slider({
         max={max}
         step={step}
         value={value}
+        aria-label={label}
+        aria-valuetext={valueText}
         onChange={(e) => onChange(parseFloat(e.target.value))}
         className="h-1 w-full cursor-pointer accent-current"
         style={{ color: 'var(--primary)' }}

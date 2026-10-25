@@ -91,14 +91,15 @@ export function PageFurnitureSection({
     onChange({ ...settings, [key]: value })
 
   return (
-    <div className="border-b p-4" style={{ borderColor: 'var(--border)' }}>
-      <div
+    <section aria-labelledby="furniture-heading" className="border-b p-4" style={{ borderColor: 'var(--border)' }}>
+      <h2
+        id="furniture-heading"
         className="mb-3 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide"
         style={{ color: 'var(--muted-foreground)' }}
       >
-        <BookMarked className="h-3.5 w-3.5" />
+        <BookMarked className="h-3.5 w-3.5" aria-hidden="true" />
         Header &amp; footer
-      </div>
+      </h2>
       {!supported ? (
         <p className="text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
           Custom page numbers, headers and footers need Chrome or Edge. In this browser, enable
@@ -189,7 +190,7 @@ export function PageFurnitureSection({
           </label>
         </div>
       )}
-    </div>
+    </section>
   )
 }
 

@@ -1794,3 +1794,112 @@
     zoom: var(--pp-split-zoom, 1);
   }
 }
+
+/* ===========================================================
+   Accessibility & UX polish (Track F) — app chrome only, screen only.
+   Focus rings, skip link, reduced motion, placeholder contrast,
+   narrow-screen overflow. Keep this block last: unlayered rules here
+   win over the layered Tailwind utilities (e.g. `outline-none`).
+   =========================================================== */
+@media screen {
+  /* One strong, consistent keyboard focus ring — distinct from the
+     "selected" style (border + inset ring + tint + check) used by theme
+     cards and the view-mode toggle. */
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  input[type='range']:focus-visible {
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+  textarea:focus-visible,
+  select:focus-visible,
+  input[type='text']:focus-visible {
+    outline-offset: 1px;
+  }
+  .pp-toast :focus-visible {
+    outline-color: var(--paper);
+  }
+  /* Skip-link target: ring around the whole document column. */
+  #document:focus-visible {
+    outline-offset: 6px;
+    border-radius: 4px;
+  }
+
+  .skip-link {
+    position: fixed;
+    left: 1rem;
+    top: 0.75rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transform: translateY(-200%);
+  }
+  .skip-link:focus,
+  .skip-link:focus-visible {
+    transform: none;
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  /* Placeholder text at full muted-foreground strength (~6:1 on the
+     card) instead of 0.5–0.65 opacity (~2.8–3.5:1). */
+  .source-editor::placeholder,
+  #settings input::placeholder {
+    color: var(--muted-foreground);
+    opacity: 1;
+  }
+  .empty-hint {
+    opacity: 1;
+  }
+}
+
+/* Narrow screens: the fixed-width sheet scrolls inside its column instead
+   of widening the whole page (which pushed header actions off-screen). */
+@media screen and (max-width: 1023px) {
+  .doc-view {
+    overflow-x: auto;
+  }
+  .doc-view .print-stage {
+    align-items: safe center;
+  }
+}
+
+/* The shell is now <div.app-shell> > grid <div> > <main#document> (proper
+   banner/complementary/main landmarks). Mirror the print rule above that
+   strips the shell's layout padding, which targets the old
+   `main > div` / `section` structure. */
+@media print {
+  .app-shell > div:has(#print-root),
+  main#document {
+    display: block !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .paste-flash .page-paper,
+  .pp-toast {
+    animation: none !important;
+  }
+}
