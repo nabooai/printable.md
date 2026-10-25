@@ -114,7 +114,7 @@
 }
 .doc-title {
   font-family: var(--font-display);
-  font-size: 2.6rem;
+  font-size: calc(2.6rem * var(--pp-fs-scale, 1));
   line-height: 1.1;
   color: var(--ink);
   letter-spacing: -0.015em;
@@ -122,7 +122,7 @@
 }
 .doc-meta {
   margin-top: 0.6em;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--pp-fs-scale, 1));
   font-style: italic;
   color: var(--muted-foreground);
   display: flex;
@@ -151,12 +151,12 @@
 .doc-header--scientific .doc-title {
   font-family: var(--font-serif);
   font-weight: 700;
-  font-size: 1.55rem;
+  font-size: calc(1.55rem * var(--pp-fs-scale, 1));
   letter-spacing: 0;
 }
 .doc-header--scientific .doc-meta {
   font-style: normal;
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--pp-fs-scale, 1));
   color: var(--ink);
 }
 .doc-header--scientific::after {
@@ -168,7 +168,7 @@
 /* Manuscript theme: typewriter feel */
 .doc-header--manuscript .doc-title {
   font-family: var(--font-mono);
-  font-size: 1.3rem;
+  font-size: calc(1.3rem * var(--pp-fs-scale, 1));
   font-weight: 700;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -176,7 +176,7 @@
 .doc-header--manuscript .doc-meta {
   font-family: var(--font-mono);
   font-style: normal;
-  font-size: 0.75rem;
+  font-size: calc(0.75rem * var(--pp-fs-scale, 1));
 }
 .doc-header--manuscript::after {
   display: none;
@@ -189,7 +189,7 @@
 .doc-header--minimal .doc-title {
   font-family: var(--font-sans), system-ui, sans-serif;
   font-weight: 700;
-  font-size: 1.8rem;
+  font-size: calc(1.8rem * var(--pp-fs-scale, 1));
   letter-spacing: -0.02em;
 }
 .doc-header--minimal .doc-meta {
@@ -206,7 +206,7 @@
 .doc-header--magazine .doc-title {
   font-family: var(--font-playfair), Georgia, serif;
   font-weight: 900;
-  font-size: 3.2rem;
+  font-size: calc(3.2rem * var(--pp-fs-scale, 1));
   line-height: 1;
   letter-spacing: -0.03em;
 }
@@ -223,7 +223,7 @@
 .doc-header--newspaper .doc-title {
   font-family: 'Times New Roman', Times, serif;
   font-weight: 900;
-  font-size: 2.6rem;
+  font-size: calc(2.6rem * var(--pp-fs-scale, 1));
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: 0.01em;
@@ -239,7 +239,7 @@
 .doc-header--hipster .doc-title {
   font-family: var(--font-bebas), Impact, sans-serif;
   font-weight: 400;
-  font-size: 3.6rem;
+  font-size: calc(3.6rem * var(--pp-fs-scale, 1));
   letter-spacing: 0.08em;
   text-transform: uppercase;
   line-height: 1;
@@ -252,7 +252,7 @@
   letter-spacing: 0.6em;
   color: var(--ink);
   margin-top: 0.6em;
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--pp-fs-scale, 1));
 }
 
 /* Technical */
@@ -262,7 +262,7 @@
 .doc-header--technical .doc-title {
   font-family: var(--font-inter), system-ui, sans-serif;
   font-weight: 800;
-  font-size: 2rem;
+  font-size: calc(2rem * var(--pp-fs-scale, 1));
   letter-spacing: -0.02em;
 }
 .doc-header--technical::after {
@@ -278,14 +278,14 @@
   font-weight: 600;
   font-variant: small-caps;
   letter-spacing: 0.12em;
-  font-size: 2rem;
+  font-size: calc(2rem * var(--pp-fs-scale, 1));
 }
 .doc-header--scholarly::after {
   content: '⁂';
   background: transparent;
   width: auto;
   height: auto;
-  font-size: 1.4rem;
+  font-size: calc(1.4rem * var(--pp-fs-scale, 1));
   color: var(--ink);
   margin-top: 0.4em;
 }
@@ -298,7 +298,7 @@
 .doc-header--modernist .doc-title {
   font-family: var(--font-inter), 'Helvetica Neue', sans-serif;
   font-weight: 800;
-  font-size: 2.6rem;
+  font-size: calc(2.6rem * var(--pp-fs-scale, 1));
   letter-spacing: -0.04em;
   text-transform: lowercase;
   line-height: 1;
@@ -314,7 +314,7 @@
 .doc-header--brutalist .doc-title {
   font-family: var(--font-archivo), Impact, sans-serif;
   font-weight: 900;
-  font-size: 2.8rem;
+  font-size: calc(2.8rem * var(--pp-fs-scale, 1));
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: -0.02em;
@@ -336,7 +336,7 @@
 .doc-header--zine .doc-title {
   font-family: var(--font-archivo), Impact, sans-serif;
   font-weight: 900;
-  font-size: 3rem;
+  font-size: calc(3rem * var(--pp-fs-scale, 1));
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: -0.01em;
@@ -355,14 +355,14 @@
   letter-spacing: 0.1em;
   color: var(--ink);
   margin-top: 0.8em;
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--pp-fs-scale, 1));
 }
 
 /* Editorial (already has prose drop cap, give the title a clear identity too) */
 .doc-header--editorial .doc-title {
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: 3rem;
+  font-size: calc(3rem * var(--pp-fs-scale, 1));
   letter-spacing: -0.02em;
 }
 
@@ -392,6 +392,41 @@
   break-after: avoid;
   page-break-after: avoid;
   color: var(--ink);
+  /* Headings never get hyphenated ("In-dex"); long tokens wrap anywhere. */
+  hyphens: manual;
+  -webkit-hyphens: manual;
+  overflow-wrap: anywhere;
+}
+/* Tailwind preflight leaves h5/h6 as plain body text; themes style h1–h4. */
+.prose-print h5,
+.prose-print h6 {
+  font-weight: 700;
+  font-size: 0.95em;
+  line-height: 1.35;
+  margin: 1em 0 0.25em;
+}
+.prose-print h6 {
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted-foreground);
+}
+
+/* Mixed-direction documents: each block takes its direction from its first
+   strong character, so Hebrew/Arabic paragraphs lay out right-to-left. */
+.prose-print p,
+.prose-print li,
+.prose-print h1,
+.prose-print h2,
+.prose-print h3,
+.prose-print h4,
+.prose-print h5,
+.prose-print h6,
+.prose-print td,
+.prose-print th,
+.prose-print blockquote,
+.doc-title {
+  unicode-bidi: plaintext;
 }
 
 .prose-print a {
@@ -399,6 +434,10 @@
   text-decoration: underline;
   text-decoration-thickness: 0.5px;
   text-underline-offset: 2px;
+  /* URLs and link text must not get hyphenated ("in-dex.html"). */
+  hyphens: manual;
+  -webkit-hyphens: manual;
+  overflow-wrap: anywhere;
 }
 
 .prose-print strong {
@@ -433,7 +472,83 @@
 .prose-print li > p {
   text-indent: 0;
   margin: 0;
-  text-align: left;
+  text-align: start;
+}
+/* GFM task lists: the checkbox is the marker. */
+.prose-print .contains-task-list {
+  list-style: none;
+  padding-left: 0.3em;
+}
+.prose-print .contains-task-list .contains-task-list {
+  padding-left: 1.6em;
+}
+/* display:block drops the list marker, including themes' ::marker content. */
+.prose-print .task-list-item {
+  display: block;
+  list-style: none;
+}
+/* A plain item mixed into a task list keeps a bullet. */
+.prose-print .contains-task-list > li:not(.task-list-item) {
+  list-style: disc;
+  margin-left: 1.1em;
+}
+/* Drawn checkbox: ink outline + text tick, so the checked state prints the
+   same with "Background graphics" off (native disabled boxes print grey). */
+.prose-print .task-list-item > input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: inline-grid;
+  place-content: center;
+  width: 0.9em;
+  height: 0.9em;
+  margin: 0 0.5em 0 0;
+  vertical-align: -0.1em;
+  border: 1.2px solid var(--ink);
+  border-radius: 2px;
+  background: transparent;
+  opacity: 1;
+}
+.prose-print .task-list-item > input[type='checkbox']:checked::before {
+  content: '\2713';
+  font-family: system-ui, sans-serif;
+  font-size: 0.85em;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+}
+
+/* Raw-HTML inline elements. */
+.prose-print kbd {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  padding: 0.05em 0.4em;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.prose-print mark {
+  background: oklch(0.93 0.12 95);
+  color: inherit;
+  padding: 0 0.1em;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.prose-print u {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-print sub,
+.prose-print sup {
+  font-size: 0.75em;
+  line-height: 0;
+}
+.prose-print details {
+  margin: 0 0 1em;
+}
+.prose-print summary {
+  cursor: pointer;
+  font-weight: 700;
 }
 
 .prose-print hr {
@@ -497,29 +612,130 @@
 }
 .prose-print th,
 .prose-print td {
-  text-align: left;
+  text-align: start;
   padding: 0.45em 0.7em;
   border-bottom: 1px solid var(--border);
   overflow-wrap: break-word;
-}
-/* URLs break anywhere without inserted hyphens; plain words in cells stay whole. */
-.prose-print td a,
-.prose-print th a {
-  hyphens: manual;
-  -webkit-hyphens: manual;
-  overflow-wrap: anywhere;
 }
 .prose-print th {
   font-weight: 700;
   border-bottom: 2px solid var(--ink);
 }
 
+/* Inline images (badges, icons) sit in the text line; an image alone in its
+   paragraph (.pp-image-para, set by the renderer) becomes a centred block. */
 .prose-print img {
   max-width: 100%;
   height: auto;
+  display: inline;
+  vertical-align: middle;
+  break-inside: avoid;
+}
+.prose-print .pp-image-para {
+  text-align: center !important;
+  text-indent: 0 !important;
+}
+.prose-print .pp-image-para img,
+.prose-print > img {
   display: block;
   margin: 1.2em auto;
-  break-inside: avoid;
+}
+.prose-print > .remote-image-chip {
+  display: table;
+  margin: 1em auto;
+}
+/* Bare URLs as link text break anywhere instead of leaving a gappy line. */
+.prose-print a.pp-url {
+  word-break: break-all;
+}
+
+/* Remote (http/https) images are not loaded until clicked. */
+.prose-print .remote-image-chip {
+  display: inline;
+  font: inherit;
+  font-family: var(--font-mono);
+  font-size: 0.78em;
+  line-height: 1.4;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 3px;
+  padding: 0.1em 0.45em;
+  cursor: pointer;
+  text-indent: 0;
+  overflow-wrap: anywhere;
+}
+.prose-print .remote-image-chip:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.prose-print .remote-image-chip__label {
+  font-weight: 700;
+}
+@media print {
+  .prose-print .remote-image-chip__action {
+    display: none;
+  }
+}
+
+/* GFM footnotes: a short rule and a small visible "Notes" label. */
+.prose-print .footnotes {
+  margin-top: 2.2em;
+  padding-top: 0.6em;
+  border-top: 1px solid var(--border);
+  font-size: 0.85em;
+  line-height: 1.45;
+}
+.prose-print .footnotes > h2,
+.prose-print .footnotes > h2.sr-only {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0 0 0.5em;
+  padding: 0;
+  overflow: visible;
+  clip: auto;
+  clip-path: none;
+  white-space: normal;
+  font-size: 0.85em;
+  font-weight: 700;
+  font-style: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: start;
+  border: none;
+  background: none;
+  color: var(--muted-foreground);
+  transform: none;
+  display: block;
+  outline: none;
+}
+.prose-print .footnotes > h2::before,
+.prose-print .footnotes > h2::after {
+  content: none;
+}
+.prose-print .footnotes ol {
+  margin: 0;
+  padding-left: 1.4em;
+}
+.prose-print .footnotes li,
+.prose-print .footnotes p {
+  margin: 0 0 0.3em;
+  text-indent: 0;
+  text-align: start;
+}
+.prose-print [data-footnote-ref] {
+  text-decoration: none;
+}
+@media print {
+  .prose-print [data-footnote-backref] {
+    display: none;
+  }
+  /* Collapsed <details> print their contents. */
+  .prose-print details::details-content {
+    content-visibility: visible;
+    display: block;
+  }
 }
 
 /* ===========================================================
@@ -527,13 +743,13 @@
    =========================================================== */
 .prose-print--magazine {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 11pt;
+  font-size: calc(11pt * var(--pp-fs-scale, 1));
   line-height: 1.6;
 }
 .prose-print--magazine h1 {
   font-family: var(--font-playfair), Georgia, serif;
   font-weight: 900;
-  font-size: 3rem;
+  font-size: calc(3rem * var(--pp-fs-scale, 1));
   line-height: 1;
   letter-spacing: -0.03em;
   text-align: center;
@@ -542,7 +758,7 @@
 .prose-print--magazine h2 {
   font-family: var(--font-playfair), Georgia, serif;
   font-weight: 800;
-  font-size: 1.9rem;
+  font-size: calc(1.9rem * var(--pp-fs-scale, 1));
   line-height: 1.05;
   letter-spacing: -0.02em;
   margin: 1.4em 0 0.4em;
@@ -551,20 +767,21 @@
   font-family: var(--font-playfair), Georgia, serif;
   font-weight: 700;
   font-style: italic;
-  font-size: 1.35rem;
+  font-size: calc(1.35rem * var(--pp-fs-scale, 1));
   margin: 1.2em 0 0.3em;
 }
 .prose-print--magazine h4 {
   font-family: var(--font-playfair), Georgia, serif;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--pp-fs-scale, 1));
   margin: 1em 0 0.25em;
 }
 .prose-print--magazine p {
   margin: 0 0 0.8em;
   text-align: justify;
 }
-.prose-print--magazine > h1:first-child + p::first-letter {
+.prose-print--magazine > h1:first-child + p::first-letter,
+.prose-print--magazine[data-has-title] > p:first-child::first-letter {
   font-family: var(--font-playfair), Georgia, serif;
   font-weight: 900;
   font-size: 4.5em;
@@ -576,7 +793,7 @@
 .prose-print--magazine blockquote {
   font-family: var(--font-playfair), Georgia, serif;
   font-style: italic;
-  font-size: 1.4rem;
+  font-size: calc(1.4rem * var(--pp-fs-scale, 1));
   line-height: 1.3;
   text-align: center;
   margin: 1.5em 2em;
@@ -595,7 +812,7 @@
    =========================================================== */
 .prose-print--newspaper {
   font-family: 'Times New Roman', Times, serif;
-  font-size: 9.5pt;
+  font-size: calc(9.5pt * var(--pp-fs-scale, 1));
   line-height: 1.35;
   text-align: justify;
   hyphens: auto;
@@ -603,7 +820,7 @@
 .prose-print--newspaper h1 {
   font-family: 'Times New Roman', Times, serif;
   font-weight: 900;
-  font-size: 2.4rem;
+  font-size: calc(2.4rem * var(--pp-fs-scale, 1));
   line-height: 1;
   text-align: center;
   text-transform: uppercase;
@@ -616,7 +833,7 @@
 .prose-print--newspaper h2 {
   font-family: 'Times New Roman', Times, serif;
   font-weight: 900;
-  font-size: 1.4rem;
+  font-size: calc(1.4rem * var(--pp-fs-scale, 1));
   line-height: 1.1;
   text-transform: uppercase;
   letter-spacing: 0.01em;
@@ -627,14 +844,14 @@
 .prose-print--newspaper h3 {
   font-family: 'Times New Roman', Times, serif;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--pp-fs-scale, 1));
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin: 1.1em 0 0.2em;
 }
 .prose-print--newspaper h4 {
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--pp-fs-scale, 1));
   font-style: italic;
   margin: 0.9em 0 0.15em;
 }
@@ -657,7 +874,7 @@
    =========================================================== */
 .prose-print--hipster {
   font-family: var(--font-fraunces), Georgia, serif;
-  font-size: 11pt;
+  font-size: calc(11pt * var(--pp-fs-scale, 1));
   line-height: 1.65;
   font-feature-settings: 'kern', 'liga', 'onum', 'ss01';
 }
@@ -667,7 +884,7 @@
 .prose-print--hipster h1 {
   font-family: var(--font-bebas), Impact, sans-serif;
   font-weight: 400;
-  font-size: 3.2rem;
+  font-size: calc(3.2rem * var(--pp-fs-scale, 1));
   letter-spacing: 0.06em;
   text-align: center;
   text-transform: uppercase;
@@ -677,7 +894,7 @@
 .prose-print--hipster h2 {
   font-family: var(--font-bebas), Impact, sans-serif;
   font-weight: 400;
-  font-size: 2rem;
+  font-size: calc(2rem * var(--pp-fs-scale, 1));
   letter-spacing: 0.08em;
   text-transform: uppercase;
   margin: 1.5em 0 0.3em;
@@ -687,27 +904,27 @@
   font-family: var(--font-fraunces), Georgia, serif;
   font-weight: 600;
   font-style: italic;
-  font-size: 1.35rem;
+  font-size: calc(1.35rem * var(--pp-fs-scale, 1));
   margin: 1.2em 0 0.3em;
 }
 .prose-print--hipster h4 {
   font-family: var(--font-bebas), Impact, sans-serif;
-  font-size: 1.15rem;
+  font-size: calc(1.15rem * var(--pp-fs-scale, 1));
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin: 1em 0 0.2em;
 }
 .prose-print--hipster p {
   margin: 0 0 0.85em;
-  text-align: left;
+  text-align: start;
 }
 .prose-print--hipster blockquote {
   font-family: var(--font-fraunces), Georgia, serif;
   font-style: italic;
-  font-size: 1.2rem;
+  font-size: calc(1.2rem * var(--pp-fs-scale, 1));
   text-align: center;
   margin: 1.5em 0;
-  padding: 0.6em 1em;
+  padding: 0.9em 1em 0.6em;
   border-top: 2px solid var(--ink);
   border-bottom: 2px solid var(--ink);
   position: relative;
@@ -715,9 +932,9 @@
 .prose-print--hipster blockquote::before {
   content: '“';
   font-family: var(--font-playfair), Georgia, serif;
-  font-size: 4em;
+  font-size: 2.6em;
   position: absolute;
-  top: -0.15em;
+  top: -0.32em;
   left: 50%;
   transform: translateX(-50%);
   background: oklch(0.95 0.02 80);
@@ -727,6 +944,13 @@
 }
 .prose-print--hipster blockquote p {
   margin: 0.4em 0 0;
+  text-align: center;
+}
+@media print {
+  /* The kraft sheet prints on white paper; the quote mark's knock-out too. */
+  .prose-print--hipster blockquote::before {
+    background: white;
+  }
 }
 .prose-print--hipster hr::before {
   content: '✦ ✦ ✦';
@@ -742,13 +966,13 @@
    =========================================================== */
 .prose-print--technical {
   font-family: var(--font-inter), system-ui, sans-serif;
-  font-size: 10pt;
+  font-size: calc(10pt * var(--pp-fs-scale, 1));
   line-height: 1.55;
 }
 .prose-print--technical h1 {
   font-family: var(--font-inter), system-ui, sans-serif;
   font-weight: 800;
-  font-size: 1.9rem;
+  font-size: calc(1.9rem * var(--pp-fs-scale, 1));
   letter-spacing: -0.02em;
   margin: 0.6em 0 0.3em;
   border-bottom: 2px solid var(--ink);
@@ -757,7 +981,7 @@
 .prose-print--technical h2 {
   font-family: var(--font-inter), system-ui, sans-serif;
   font-weight: 700;
-  font-size: 1.3rem;
+  font-size: calc(1.3rem * var(--pp-fs-scale, 1));
   margin: 1.5em 0 0.4em;
   padding-left: 0.6em;
   border-left: 4px solid var(--ink);
@@ -765,7 +989,7 @@
 .prose-print--technical h3 {
   font-family: var(--font-mono);
   font-weight: 600;
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--pp-fs-scale, 1));
   margin: 1.2em 0 0.3em;
   color: var(--ink);
 }
@@ -776,7 +1000,7 @@
 .prose-print--technical h4 {
   font-family: var(--font-mono);
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: calc(0.92rem * var(--pp-fs-scale, 1));
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--muted-foreground);
@@ -825,7 +1049,7 @@
    =========================================================== */
 .prose-print--scholarly {
   font-family: var(--font-fraunces), 'EB Garamond', Georgia, serif;
-  font-size: 11pt;
+  font-size: calc(11pt * var(--pp-fs-scale, 1));
   line-height: 1.55;
   text-align: justify;
   font-feature-settings: 'kern', 'liga', 'onum', 'smcp';
@@ -835,7 +1059,7 @@
   font-weight: 600;
   font-variant: small-caps;
   letter-spacing: 0.1em;
-  font-size: 1.6rem;
+  font-size: calc(1.6rem * var(--pp-fs-scale, 1));
   text-align: center;
   margin: 0.8em 0 0.4em;
 }
@@ -844,7 +1068,7 @@
   font-weight: 600;
   font-variant: small-caps;
   letter-spacing: 0.08em;
-  font-size: 1.15rem;
+  font-size: calc(1.15rem * var(--pp-fs-scale, 1));
   text-align: center;
   margin: 1.6em 0 0.5em;
 }
@@ -852,13 +1076,13 @@
   font-family: var(--font-fraunces), Georgia, serif;
   font-weight: 500;
   font-style: italic;
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--pp-fs-scale, 1));
   margin: 1.2em 0 0.3em;
   text-align: center;
 }
 .prose-print--scholarly h4 {
   font-weight: 600;
-  font-size: 0.98rem;
+  font-size: calc(0.98rem * var(--pp-fs-scale, 1));
   font-style: italic;
   margin: 1em 0 0.2em;
 }
@@ -878,7 +1102,8 @@
 .prose-print--scholarly ol + p {
   text-indent: 0;
 }
-.prose-print--scholarly > h1:first-child + p::first-line {
+.prose-print--scholarly > h1:first-child + p::first-line,
+.prose-print--scholarly[data-has-title] > p:first-child::first-line {
   font-variant: small-caps;
   letter-spacing: 0.06em;
 }
@@ -903,14 +1128,14 @@
    =========================================================== */
 .prose-print--modernist {
   font-family: var(--font-inter), 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-size: 10pt;
+  font-size: calc(10pt * var(--pp-fs-scale, 1));
   line-height: 1.5;
-  text-align: left;
+  text-align: start;
 }
 .prose-print--modernist h1 {
   font-family: var(--font-inter), 'Helvetica Neue', sans-serif;
   font-weight: 800;
-  font-size: 2.2rem;
+  font-size: calc(2.2rem * var(--pp-fs-scale, 1));
   letter-spacing: -0.04em;
   line-height: 1;
   text-transform: lowercase;
@@ -919,7 +1144,7 @@
 .prose-print--modernist h2 {
   font-family: var(--font-inter), sans-serif;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--pp-fs-scale, 1));
   text-transform: uppercase;
   letter-spacing: 0.06em;
   margin: 1.6em 0 0.3em;
@@ -927,7 +1152,7 @@
 .prose-print--modernist h3 {
   font-family: var(--font-inter), sans-serif;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--pp-fs-scale, 1));
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--muted-foreground);
@@ -935,7 +1160,7 @@
 }
 .prose-print--modernist h4 {
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--pp-fs-scale, 1));
   margin: 1em 0 0.2em;
 }
 .prose-print--modernist p {
@@ -971,13 +1196,13 @@
    =========================================================== */
 .prose-print--brutalist {
   font-family: var(--font-space), 'Courier New', monospace;
-  font-size: 10.5pt;
+  font-size: calc(10.5pt * var(--pp-fs-scale, 1));
   line-height: 1.5;
 }
 .prose-print--brutalist h1 {
   font-family: var(--font-archivo), Impact, sans-serif;
   font-weight: 900;
-  font-size: 2.4rem;
+  font-size: calc(2.4rem * var(--pp-fs-scale, 1));
   line-height: 0.95;
   text-transform: uppercase;
   letter-spacing: -0.02em;
@@ -992,7 +1217,7 @@
 .prose-print--brutalist h2 {
   font-family: var(--font-archivo), Impact, sans-serif;
   font-weight: 900;
-  font-size: 1.4rem;
+  font-size: calc(1.4rem * var(--pp-fs-scale, 1));
   text-transform: uppercase;
   margin: 1.4em 0 0.3em;
   border-top: 2px solid var(--ink);
@@ -1002,7 +1227,7 @@
 .prose-print--brutalist h3 {
   font-family: var(--font-archivo), Impact, sans-serif;
   font-weight: 900;
-  font-size: 1.1rem;
+  font-size: calc(1.1rem * var(--pp-fs-scale, 1));
   text-transform: uppercase;
   margin: 1em 0 0.2em;
 }
@@ -1014,7 +1239,7 @@
 .prose-print--brutalist h4 {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--pp-fs-scale, 1));
   text-transform: uppercase;
   margin: 0.9em 0 0.2em;
 }
@@ -1080,7 +1305,7 @@
    =========================================================== */
 .prose-print--zine {
   font-family: var(--font-mono), 'Courier New', monospace;
-  font-size: 10.5pt;
+  font-size: calc(10.5pt * var(--pp-fs-scale, 1));
   line-height: 1.55;
 }
 .page-paper--zine {
@@ -1089,7 +1314,7 @@
 .prose-print--zine h1 {
   font-family: var(--font-archivo), Impact, sans-serif;
   font-weight: 900;
-  font-size: 2.8rem;
+  font-size: calc(2.8rem * var(--pp-fs-scale, 1));
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: -0.01em;
@@ -1106,20 +1331,27 @@
 .prose-print--zine h2 {
   font-family: var(--font-archivo), Impact, sans-serif;
   font-weight: 900;
-  font-size: 1.6rem;
+  font-size: calc(1.6rem * var(--pp-fs-scale, 1));
   text-transform: uppercase;
   letter-spacing: 0.02em;
   margin: 1.5em 0 0.4em;
   background: var(--ink);
   color: var(--paper);
   padding: 0.15em 0.4em;
-  display: inline-block;
+  /* Own line (consecutive ## never sit side by side), box hugs the text. */
+  display: block;
+  width: fit-content;
+  max-width: 100%;
   transform: rotate(0.5deg);
+  /* Inverted fill must survive "Background graphics" off, or the white
+     text vanishes on white paper. */
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 .prose-print--zine h3 {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: calc(1.1rem * var(--pp-fs-scale, 1));
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin: 1.2em 0 0.3em;
@@ -1129,7 +1361,7 @@
 .prose-print--zine h4 {
   font-family: var(--font-mono);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--pp-fs-scale, 1));
   text-transform: uppercase;
   margin: 1em 0 0.2em;
 }
@@ -1152,7 +1384,7 @@
 .prose-print--zine blockquote p {
   margin: 0;
 }
-.prose-print--zine ul li::marker {
+.prose-print--zine ul > li::marker {
   content: '✶ ';
 }
 .prose-print--zine hr::before {
@@ -1166,6 +1398,14 @@
   border: none;
   border-radius: 0;
   padding: 0.05em 0.3em;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+/* Code blocks: ink on the light pre background, not the inverted inline style. */
+.prose-print--zine pre code {
+  background: transparent;
+  color: var(--ink);
+  padding: 0;
 }
 
 /* ===========================================================
@@ -1173,12 +1413,12 @@
    =========================================================== */
 .prose-print--editorial {
   font-family: var(--font-serif);
-  font-size: 11pt;
+  font-size: calc(11pt * var(--pp-fs-scale, 1));
   line-height: 1.65;
 }
 .prose-print--editorial h1 {
   font-family: var(--font-display);
-  font-size: 2.4rem;
+  font-size: calc(2.4rem * var(--pp-fs-scale, 1));
   margin: 1.2em 0 0.4em;
   text-align: center;
   letter-spacing: -0.02em;
@@ -1186,7 +1426,7 @@
 }
 .prose-print--editorial h2 {
   font-family: var(--font-display);
-  font-size: 1.65rem;
+  font-size: calc(1.65rem * var(--pp-fs-scale, 1));
   font-weight: 400;
   margin: 1.5em 0 0.5em;
   border-bottom: 1px solid var(--rule);
@@ -1194,13 +1434,13 @@
 }
 .prose-print--editorial h3 {
   font-family: var(--font-display);
-  font-size: 1.3rem;
+  font-size: calc(1.3rem * var(--pp-fs-scale, 1));
   font-style: italic;
   font-weight: 400;
   margin: 1.3em 0 0.4em;
 }
 .prose-print--editorial h4 {
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--pp-fs-scale, 1));
   font-weight: 700;
   margin: 1.1em 0 0.3em;
 }
@@ -1235,7 +1475,7 @@
 }
 .prose-print--editorial blockquote p {
   text-indent: 0;
-  text-align: left;
+  text-align: start;
 }
 
 /* ===========================================================
@@ -1243,13 +1483,13 @@
    =========================================================== */
 .prose-print--scientific {
   font-family: var(--font-serif);
-  font-size: 10.5pt;
+  font-size: calc(10.5pt * var(--pp-fs-scale, 1));
   line-height: 1.45;
   text-align: justify;
 }
 .prose-print--scientific h1 {
   font-family: var(--font-serif);
-  font-size: 1.45rem;
+  font-size: calc(1.45rem * var(--pp-fs-scale, 1));
   font-weight: 700;
   text-align: center;
   margin: 0 0 0.4em;
@@ -1257,21 +1497,21 @@
 }
 .prose-print--scientific h2 {
   font-family: var(--font-serif);
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--pp-fs-scale, 1));
   font-weight: 700;
   margin: 1.3em 0 0.4em;
   text-transform: none;
 }
 .prose-print--scientific h3 {
   font-family: var(--font-serif);
-  font-size: 0.98rem;
+  font-size: calc(0.98rem * var(--pp-fs-scale, 1));
   font-weight: 700;
   font-style: italic;
   margin: 1em 0 0.3em;
 }
 .prose-print--scientific h4 {
   font-family: var(--font-serif);
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--pp-fs-scale, 1));
   font-weight: 700;
   margin: 0.9em 0 0.2em;
   font-style: italic;
@@ -1350,7 +1590,7 @@
    =========================================================== */
 .prose-print--manuscript {
   font-family: var(--font-mono);
-  font-size: 11pt;
+  font-size: calc(11pt * var(--pp-fs-scale, 1));
   line-height: 2;
 }
 .prose-print--manuscript h1,
@@ -1363,29 +1603,29 @@
   letter-spacing: 0.02em;
 }
 .prose-print--manuscript h1 {
-  font-size: 1.1rem;
+  font-size: calc(1.1rem * var(--pp-fs-scale, 1));
   text-align: center;
   margin: 1em 0 0.5em;
 }
 .prose-print--manuscript h2 {
-  font-size: 1rem;
+  font-size: calc(1rem * var(--pp-fs-scale, 1));
   margin: 1.4em 0 0.3em;
 }
 .prose-print--manuscript h3 {
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--pp-fs-scale, 1));
   margin: 1.1em 0 0.2em;
   text-transform: none;
   font-style: italic;
 }
 .prose-print--manuscript h4 {
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--pp-fs-scale, 1));
   margin: 0.9em 0 0.2em;
   text-transform: none;
 }
 .prose-print--manuscript p {
   margin: 0;
   text-indent: 2em;
-  text-align: left;
+  text-align: start;
 }
 .prose-print--manuscript h1 + p,
 .prose-print--manuscript h2 + p,
@@ -1423,7 +1663,7 @@
    =========================================================== */
 .prose-print--minimal {
   font-family: var(--font-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
-  font-size: 10.5pt;
+  font-size: calc(10.5pt * var(--pp-fs-scale, 1));
   line-height: 1.6;
 }
 .prose-print--minimal h1,
@@ -1435,24 +1675,24 @@
   letter-spacing: -0.01em;
 }
 .prose-print--minimal h1 {
-  font-size: 1.7rem;
+  font-size: calc(1.7rem * var(--pp-fs-scale, 1));
   margin: 1em 0 0.4em;
 }
 .prose-print--minimal h2 {
-  font-size: 1.25rem;
+  font-size: calc(1.25rem * var(--pp-fs-scale, 1));
   margin: 1.4em 0 0.4em;
 }
 .prose-print--minimal h3 {
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--pp-fs-scale, 1));
   margin: 1.1em 0 0.3em;
 }
 .prose-print--minimal h4 {
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--pp-fs-scale, 1));
   margin: 0.9em 0 0.2em;
 }
 .prose-print--minimal p {
   margin: 0 0 0.8em;
-  text-align: left;
+  text-align: start;
 }
 .prose-print--minimal blockquote {
   margin: 1em 0;
@@ -1465,9 +1705,12 @@
 }
 
 /* ===========================================================
-   Drop cap (editorial only) — applies to first paragraph after first H1
+   Drop cap (editorial only) — applies to the first paragraph: after the title
+   block (data-has-title, the leading H1 is lifted into .doc-header) or after
+   a leading H1 left in the body
    =========================================================== */
-.prose-print--editorial > h1:first-child + p::first-letter {
+.prose-print--editorial > h1:first-child + p::first-letter,
+.prose-print--editorial[data-has-title] > p:first-child::first-letter {
   font-family: var(--font-display);
   font-size: 3.6em;
   float: left;
@@ -1587,48 +1830,20 @@
   --pp-para-spacing: 1;
   --pp-letter-spacing: 0em;
   --pp-page-margin: 1;
-  --pp-text-align: justify;
+  --pp-text-align: start;
   --pp-hyphens: auto;
 }
 
-/* Font scale: set the base font-size on the inner content area, and override
-   all heading + special block sizes in `em` so they scale together with body
-   text. Theme rules use `rem` (root-relative) which the slider can't affect,
-   so we re-declare here with !important. */
+/* Font scale: the slider multiplies every theme's own sizes. Theme rules
+   declare their rem/pt sizes as calc(<size> * var(--pp-fs-scale, 1)), so each
+   theme keeps its heading/body/blockquote proportions at any scale. em-based
+   sizes (code, tables) follow their parent automatically. */
 .print-stage .page-paper__inner {
   font-size: calc(11pt * var(--pp-fs-scale));
 }
-.print-stage .prose-print {
-  font-size: 1em !important;
-}
-.print-stage .prose-print h1 {
-  font-size: 2.4em !important;
-}
-.print-stage .prose-print h2 {
-  font-size: 1.6em !important;
-}
-.print-stage .prose-print h3 {
-  font-size: 1.25em !important;
-}
-.print-stage .prose-print h4 {
-  font-size: 1.05em !important;
-}
-.print-stage .prose-print h5,
-.print-stage .prose-print h6 {
-  font-size: 0.95em !important;
-}
-.print-stage .prose-print pre,
+/* Code inside a <pre> must not shrink twice (pre is already smaller). */
 .print-stage .prose-print pre code {
-  font-size: 0.85em !important;
-}
-.print-stage .prose-print code {
-  font-size: 0.88em !important;
-}
-.print-stage .prose-print blockquote {
-  font-size: 1em !important;
-}
-.print-stage .doc-title {
-  font-size: 2.6em !important;
+  font-size: inherit !important;
 }
 
 /* Line-height, letter-spacing, alignment, hyphens — apply to body text
@@ -1642,9 +1857,16 @@
 }
 .print-stage .prose-print,
 .print-stage .prose-print p {
-  text-align: var(--pp-text-align) !important;
   hyphens: var(--pp-hyphens) !important;
   -webkit-hyphens: var(--pp-hyphens) !important;
+}
+/* Alignment: each theme's own alignment wins (centred pull quotes, ragged-right
+   themes) unless the reader picked Justify / Left, which sets data-align.
+   Pull quotes (blockquote) keep the theme's alignment either way. */
+.print-stage[data-align] .prose-print > p,
+.print-stage[data-align] .prose-print li > p,
+.print-stage[data-align] .prose-print .footnotes p {
+  text-align: var(--pp-text-align) !important;
 }
 
 /* Paragraph spacing: scale margin-bottom on block elements. */
