@@ -1,0 +1,3 @@
+allowBuilds:
+  # Only fetches a fallback native binding; prebuilt optional deps cover supported platforms.
+  unrs-resolver: false
