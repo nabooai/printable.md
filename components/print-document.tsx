@@ -123,8 +123,6 @@ export function PrintDocument({
     '--pp-hyphens': typography.hyphenate ? 'auto' : 'manual',
   } as React.CSSProperties
 
-  const isEmptyDup = isEmpty // (already computed above)
-
   return (
     <div className="print-stage" style={cssVars}>
       <article

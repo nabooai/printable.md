@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   PrintDocument,
   type Theme,
@@ -63,7 +63,18 @@ export default function Page() {
   const [typography, setTypography] = useLocalStorage<TypographySettings>('pp:typo', DEFAULT_TYPOGRAPHY)
   const [showSidebar, setShowSidebar] = useState(true)
   const [pasteFlash, setPasteFlash] = useState(false)
-  const printRootRef = useRef<HTMLDivElement>(null)
+  const pasteFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Briefly highlight the page after new content arrives. Restarts the timer
+  // on repeated calls and clears it on unmount.
+  const flashPaste = useCallback(() => {
+    if (pasteFlashTimer.current) clearTimeout(pasteFlashTimer.current)
+    setPasteFlash(true)
+    pasteFlashTimer.current = setTimeout(() => setPasteFlash(false), 600)
+  }, [])
+  useEffect(() => () => {
+    if (pasteFlashTimer.current) clearTimeout(pasteFlashTimer.current)
+  }, [])
 
   const updateTypo = <K extends keyof TypographySettings>(key: K, value: TypographySettings[K]) => {
     setTypography({ ...typography, [key]: value })
@@ -91,12 +102,11 @@ export default function Page() {
       if (!text.trim()) return
       e.preventDefault()
       setMarkdown(text)
-      setPasteFlash(true)
-      setTimeout(() => setPasteFlash(false), 600)
+      flashPaste()
     }
     window.addEventListener('paste', handler)
     return () => window.removeEventListener('paste', handler)
-  }, [setMarkdown])
+  }, [setMarkdown, flashPaste])
 
   // Update document.title from first heading
   useEffect(() => {
@@ -125,8 +135,7 @@ export default function Page() {
       const text = await navigator.clipboard.readText()
       if (text.trim()) {
         setMarkdown(text)
-        setPasteFlash(true)
-        setTimeout(() => setPasteFlash(false), 600)
+        flashPaste()
       }
     } catch {
       alert('Could not read clipboard. Press Ctrl/Cmd+V anywhere on the page instead.')
@@ -443,7 +452,6 @@ export default function Page() {
           </div>
           <div
             id="print-root"
-            ref={printRootRef}
             className={pasteFlash ? 'paste-flash' : ''}
           >
             <PrintDocument
@@ -453,8 +461,7 @@ export default function Page() {
               typography={typography}
               onMarkdownChange={(md) => {
                 setMarkdown(md)
-                setPasteFlash(true)
-                setTimeout(() => setPasteFlash(false), 600)
+                flashPaste()
               }}
             />
           </div>
