@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     // Claude Code skills and worktrees are not part of the app.
     '.claude/**',
+    // Wrangler's local dev bundles (`wrangler pages dev out`).
+    '.wrangler/**',
   ]),
 ])
 

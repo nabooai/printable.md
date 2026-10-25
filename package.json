@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/write-headers.mjs",
     "start": "next start",
     "lint": "eslint .",
     "deploy": "sh scripts/deploy.sh"
