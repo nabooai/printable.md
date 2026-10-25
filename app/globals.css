@@ -1647,29 +1647,6 @@
   }
 }
 
-/* ===========================================================
-   Paste editor — contenteditable empty state on the page itself.
-   The page IS the editor: blinking caret, placeholder, and you can
-   paste markdown directly. Once content exists, it's replaced by
-   the rendered markdown view in PrintDocument.
-   =========================================================== */
-.paste-editor {
-  min-height: 60vh;
-  outline: none;
-  caret-color: var(--primary);
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  cursor: text;
-}
-.paste-editor:empty::before {
-  content: attr(data-placeholder);
-  color: var(--muted-foreground);
-  opacity: 0.5;
-  font-style: italic;
-  pointer-events: none;
-  display: block;
-}
-
 /* Paste flash animation when content is dropped in */
 .paste-flash .page-paper {
   animation: paste-flash-anim 0.6s ease-out;
@@ -1683,8 +1660,53 @@
   }
 }
 
-@media print {
-  .paste-editor {
+/* ===========================================================
+   Editor & view modes (Preview / Source / Split)
+   The rendered page (#print-root) is always in the DOM so printing
+   from any mode prints the document; only screen layout changes.
+   =========================================================== */
+.empty-hint {
+  min-height: 40vh;
+  font-style: italic;
+  color: var(--muted-foreground);
+  opacity: 0.7;
+}
+.source-editor {
+  height: 100%;
+  tab-size: 4;
+  caret-color: var(--primary);
+}
+.source-editor::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.65;
+}
+
+@media screen {
+  .doc-view--source > .source-pane {
+    height: calc(100vh - 136px);
+    min-height: 320px;
+  }
+  .doc-view--source > :not(.source-pane) {
     display: none;
+  }
+
+  .doc-view--split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 24px;
+    align-items: start;
+  }
+  .doc-view--split > .source-pane {
+    grid-column: 1;
+    grid-row: 1 / span 8;
+    position: sticky;
+    top: 88px;
+    height: calc(100vh - 104px);
+  }
+  .doc-view--split > :not(.source-pane) {
+    grid-column: 2;
+  }
+  .doc-view--split #print-root {
+    zoom: var(--pp-split-zoom, 1);
   }
 }

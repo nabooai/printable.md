@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import {
   PrintDocument,
   type Theme,
@@ -10,6 +11,21 @@ import {
 } from '@/components/print-document'
 import { SAMPLE_MARKDOWN } from '@/lib/sample-markdown'
 import { useLocalStorage } from '@/hooks/use-local-storage'
+import { useHotkeys, isTextField } from '@/hooks/use-hotkeys'
+import { useIsClient, useMediaQuery } from '@/hooks/use-media-query'
+import { SourceEditor } from '@/components/source-editor'
+import { Toast, type ToastData } from '@/components/toast'
+import { ViewModeToggle, type ViewMode } from '@/components/view-mode-toggle'
+import { RecentDocuments } from '@/components/recent-documents'
+import {
+  clearHistory,
+  deleteHistory,
+  listHistory,
+  newDocId,
+  saveHistory,
+  titleFor,
+  type HistoryEntry,
+} from '@/lib/history'
 import {
   Printer,
   FileText,
@@ -32,6 +48,8 @@ import {
   Trash2,
   PanelLeftClose,
   PanelLeftOpen,
+  FolderOpen,
+  Keyboard,
 } from 'lucide-react'
 
 const THEMES: {
@@ -81,32 +99,233 @@ export default function Page() {
   }
   const resetTypo = () => setTypography(DEFAULT_TYPOGRAPHY)
 
-  // Global paste — anywhere in the window. We avoid stealing paste from real
-  // text inputs/textareas/contenteditable so the typography sliders' number
-  // inputs etc. still work normally.
+  // ---- Editing & view mode ----
+  const [viewMode, setViewMode] = useState<ViewMode>('source')
+  const wide = useMediaQuery('(min-width: 1024px)')
+  // Split needs room; on narrow screens it falls back to Source.
+  const mode: ViewMode = viewMode === 'split' && !wide ? 'source' : viewMode
+  const editorRef = useRef<HTMLTextAreaElement>(null)
+  const isClient = useIsClient()
+  const mod = isClient && /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘' : 'Ctrl+'
+
+  // The rendered page lags the source by a short debounce while typing.
+  const [preview, setPreview] = useState('')
+  const previewTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const setDocument = (md: string) => {
+    if (previewTimer.current) clearTimeout(previewTimer.current)
+    setMarkdown(md)
+    setPreview(md)
+  }
+
   useEffect(() => {
-    const handler = (e: ClipboardEvent) => {
-      const target = e.target as HTMLElement | null
-      if (target) {
-        const tag = target.tagName
-        if (
-          tag === 'INPUT' ||
-          tag === 'TEXTAREA' ||
-          tag === 'SELECT' ||
-          (target as HTMLElement).isContentEditable
-        ) {
-          return
-        }
-      }
-      const text = e.clipboardData?.getData('text/plain') ?? ''
-      if (!text.trim()) return
-      e.preventDefault()
-      setMarkdown(text)
-      flashPaste()
+    if (mode !== 'preview') editorRef.current?.focus()
+  }, [mode])
+
+  const cycleMode = () => {
+    const order: ViewMode[] = wide ? ['preview', 'source', 'split'] : ['preview', 'source']
+    setViewMode(order[(order.indexOf(mode) + 1) % order.length])
+  }
+
+  // Make sure a print started right after typing shows the latest text.
+  const flushPreview = useEffectEvent(() => {
+    if (previewTimer.current) clearTimeout(previewTimer.current)
+    flushSync(() => setPreview(markdown))
+  })
+  useEffect(() => {
+    const onBeforePrint = () => flushPreview()
+    window.addEventListener('beforeprint', onBeforePrint)
+    return () => window.removeEventListener('beforeprint', onBeforePrint)
+  }, [])
+
+  // Split view: scale the page down to fit its column.
+  const sectionRef = useRef<HTMLElement>(null)
+  const [sectionWidth, setSectionWidth] = useState(0)
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => setSectionWidth(entry.contentRect.width))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  const pagePx = pageSize === 'a4' ? 794 : 816
+  const splitZoom = sectionWidth ? Math.min(1, ((sectionWidth - 24) / 2 - 8) / pagePx) : 1
+
+  // ---- Local history (IndexedDB) ----
+  const [keepHistory, setKeepHistory] = useLocalStorage<boolean>('pp:keepHistory', true)
+  const [history, setHistory] = useState<{ entries: HistoryEntry[]; now: number } | null>(null)
+  const [offerClearHistory, setOfferClearHistory] = useState(false)
+  const [docId, setDocId] = useState<string | null>(null)
+  const lastSaved = useRef('')
+
+  const refreshHistory = useCallback(() => {
+    void listHistory().then((entries) => setHistory(entries ? { entries, now: Date.now() } : null))
+  }, [])
+  useEffect(() => {
+    refreshHistory()
+    const t = setInterval(() => setHistory((h) => h && { ...h, now: Date.now() }), 60_000)
+    return () => clearInterval(t)
+  }, [refreshHistory])
+
+  const saveToHistory = (md: string, id: string | null, t: Theme = theme, size: PageSize = pageSize) => {
+    if (!keepHistory || !id || !md.trim()) return
+    const key = [id, t, size, md].join('\0')
+    if (lastSaved.current === key) return
+    lastSaved.current = key
+    void saveHistory({ id, title: titleFor(md), markdown: md, updatedAt: Date.now(), theme: t, pageSize: size }).then(
+      refreshHistory,
+    )
+  }
+  const saveLater = useEffectEvent(() => saveToHistory(markdown, docId))
+  useEffect(() => {
+    if (!keepHistory || !markdown.trim()) return
+    const t = setTimeout(saveLater, 1000)
+    return () => clearTimeout(t)
+  }, [markdown, docId, theme, pageSize, keepHistory])
+
+  const handleKeepHistoryChange = (keep: boolean) => {
+    setKeepHistory(keep)
+    setOfferClearHistory(!keep && !!history?.entries.length)
+    if (keep) lastSaved.current = ''
+  }
+  const handleClearHistory = () => {
+    setOfferClearHistory(false)
+    void clearHistory().then(refreshHistory)
+  }
+  const handleDeleteHistory = (id: string) => {
+    void deleteHistory(id).then(refreshHistory)
+  }
+
+  // ---- Whole-document replacement with one level of undo ----
+  type Snapshot = { markdown: string; docId: string | null; theme: Theme; pageSize: PageSize; mode: ViewMode }
+  const undoRef = useRef<Snapshot | null>(null)
+  const [toast, setToast] = useState<ToastData | null>(null)
+  const dismissToast = useCallback(() => setToast(null), [])
+  const showToast = (message: string, actionLabel?: string) =>
+    setToast({ id: Date.now(), message, actionLabel })
+
+  const replaceDocument = (
+    next: string,
+    opts: { id?: string; theme?: Theme; pageSize?: PageSize } = {},
+  ) => {
+    if (next === markdown && !opts.id) return
+    saveToHistory(markdown, docId)
+    if (markdown.trim()) {
+      undoRef.current = { markdown, docId, theme, pageSize, mode }
+      showToast(next.trim() ? 'Document replaced' : 'Cleared', 'Undo')
+    } else {
+      undoRef.current = null
+      setToast(null)
     }
+    const id = next.trim() ? (opts.id ?? newDocId()) : null
+    setDocument(next)
+    setDocId(id)
+    if (opts.theme) setTheme(opts.theme)
+    if (opts.pageSize) setPageSize(opts.pageSize)
+    if (next.trim()) {
+      if (mode === 'source') setViewMode('preview')
+      flashPaste()
+      saveToHistory(next, id, opts.theme, opts.pageSize)
+    } else {
+      if (mode === 'preview') setViewMode('source')
+      requestAnimationFrame(() => editorRef.current?.focus())
+    }
+  }
+
+  const undoReplace = () => {
+    const snap = undoRef.current
+    if (!snap) return false
+    undoRef.current = null
+    saveToHistory(markdown, docId)
+    setDocument(snap.markdown)
+    setDocId(snap.docId)
+    setTheme(snap.theme)
+    setPageSize(snap.pageSize)
+    setViewMode(snap.mode)
+    setToast(null)
+    return true
+  }
+
+  const handleEdit = (md: string) => {
+    setMarkdown(md)
+    if (!docId && md.trim()) setDocId(newDocId())
+    if (previewTimer.current) clearTimeout(previewTimer.current)
+    previewTimer.current = setTimeout(() => setPreview(md), 150)
+  }
+
+  const handleOpenHistory = (entry: HistoryEntry) => {
+    if (entry.id === docId && entry.markdown === markdown) return
+    replaceDocument(entry.markdown, { id: entry.id, theme: entry.theme, pageSize: entry.pageSize })
+  }
+
+  // ---- Open file / drag & drop ----
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [dragging, setDragging] = useState(false)
+  const dragDepth = useRef(0)
+
+  const openFile = async (file: File) => {
+    const textLike = /\.(md|markdown|mdown|mkd|txt)$/i.test(file.name) || file.type.startsWith('text/')
+    if (!textLike) {
+      showToast(`Can't open ${file.name} — use a .md or .txt file`)
+      return
+    }
+    const text = await file.text()
+    if (!text.trim()) {
+      showToast(`${file.name} is empty`)
+      return
+    }
+    replaceDocument(text)
+  }
+
+  const onDragEvent = useEffectEvent((e: DragEvent) => {
+    if (!e.dataTransfer?.types.includes('Files')) return
+    e.preventDefault()
+    if (e.type === 'dragenter') {
+      dragDepth.current++
+      setDragging(true)
+    } else if (e.type === 'dragleave') {
+      dragDepth.current = Math.max(0, dragDepth.current - 1)
+      if (dragDepth.current === 0) setDragging(false)
+    } else if (e.type === 'dragover') {
+      e.dataTransfer.dropEffect = 'copy'
+    } else if (e.type === 'drop') {
+      dragDepth.current = 0
+      setDragging(false)
+      const file = e.dataTransfer.files[0]
+      if (file) void openFile(file)
+    }
+  })
+  useEffect(() => {
+    const types = ['dragenter', 'dragleave', 'dragover', 'drop'] as const
+    const listener = (e: DragEvent) => onDragEvent(e)
+    for (const t of types) window.addEventListener(t, listener)
+    return () => {
+      for (const t of types) window.removeEventListener(t, listener)
+    }
+  }, [])
+
+  useHotkeys({
+    e: () => cycleMode(),
+    o: () => fileInputRef.current?.click(),
+    s: () => {
+      if (markdown.trim()) handleDownloadMd()
+    },
+    z: (e) => !isTextField(e.target) && undoReplace(),
+  })
+
+  // Global paste — anywhere in the window. We avoid stealing paste from real
+  // text fields (the source editor, number inputs etc.) so they work normally.
+  const onWindowPaste = useEffectEvent((e: ClipboardEvent) => {
+    if (isTextField(e.target)) return
+    const text = e.clipboardData?.getData('text/plain') ?? ''
+    if (!text.trim()) return
+    e.preventDefault()
+    replaceDocument(text)
+  })
+  useEffect(() => {
+    const handler = (e: ClipboardEvent) => onWindowPaste(e)
     window.addEventListener('paste', handler)
     return () => window.removeEventListener('paste', handler)
-  }, [setMarkdown, flashPaste])
+  }, [])
 
   // Update document.title from first heading
   useEffect(() => {
@@ -133,21 +352,15 @@ export default function Page() {
   const handlePasteFromClipboard = async () => {
     try {
       const text = await navigator.clipboard.readText()
-      if (text.trim()) {
-        setMarkdown(text)
-        flashPaste()
-      }
+      if (text.trim()) replaceDocument(text)
     } catch {
       alert('Could not read clipboard. Press Ctrl/Cmd+V anywhere on the page instead.')
     }
   }
 
-  const handleClear = () => {
-    if (markdown.trim() && !confirm('Clear the document?')) return
-    setMarkdown('')
-  }
+  const handleClear = () => replaceDocument('')
 
-  const handleLoadSample = () => setMarkdown(SAMPLE_MARKDOWN)
+  const handleLoadSample = () => replaceDocument(SAMPLE_MARKDOWN)
 
   const handleDownloadMd = () => {
     const blob = new Blob([markdown], { type: 'text/markdown' })
@@ -171,7 +384,7 @@ export default function Page() {
           borderColor: 'var(--border)',
         }}
       >
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-6 py-3">
+        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-2 px-4 py-3 sm:gap-4 sm:px-6">
           <div className="flex items-center gap-2.5">
             <button
               onClick={() => setShowSidebar(!showSidebar)}
@@ -182,7 +395,7 @@ export default function Page() {
               {showSidebar ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
             </button>
             <div
-              className="flex h-9 w-9 items-center justify-center rounded-md"
+              className="hidden h-9 w-9 items-center justify-center rounded-md sm:flex"
               style={{ background: 'var(--primary)' }}
             >
               <FileText className="h-5 w-5" style={{ color: 'var(--primary-foreground)' }} />
@@ -191,7 +404,7 @@ export default function Page() {
               <div className="font-display text-xl" style={{ color: 'var(--ink)' }}>
                 PRINTABLE.md
               </div>
-              <div className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+              <div className="hidden text-xs sm:block" style={{ color: 'var(--muted-foreground)' }}>
                 Paste markdown. Print beautifully.
               </div>
             </div>
@@ -225,6 +438,7 @@ export default function Page() {
               <Download className="h-4 w-4" />
               .md
             </button>
+            <ViewModeToggle mode={mode} onChange={setViewMode} allowSplit={wide} shortcut={`${mod}E`} />
             <button
               onClick={handlePrint}
               disabled={isEmpty}
@@ -239,7 +453,7 @@ export default function Page() {
       </header>
 
       <div
-        className={`mx-auto grid max-w-[1500px] gap-6 px-6 py-6 ${
+        className={`mx-auto grid ${mode === 'split' ? 'max-w-[2400px]' : 'max-w-[1500px]'} gap-6 px-6 py-6 ${
           showSidebar ? 'lg:grid-cols-[360px_1fr]' : ''
         }`}
       >
@@ -405,6 +619,14 @@ export default function Page() {
                 </div>
                 <div className="flex flex-col gap-2">
                   <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition hover:bg-secondary"
+                    style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
+                  >
+                    <FolderOpen className="h-4 w-4" />
+                    Open…
+                  </button>
+                  <button
                     onClick={handlePasteFromClipboard}
                     className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm transition hover:bg-secondary"
                     style={{ borderColor: 'var(--border)', color: 'var(--ink)' }}
@@ -432,15 +654,73 @@ export default function Page() {
                   )}
                 </div>
                 <p className="mt-3 text-xs leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-                  Or just press <kbd className="font-mono">Ctrl/Cmd+V</kbd> anywhere on the page.
-                  The first <code className="font-mono">#</code> heading becomes the document title.
+                  Or just press <kbd className="font-mono">Ctrl/Cmd+V</kbd> anywhere on the page, or drop a
+                  file on it. The first <code className="font-mono">#</code> heading becomes the document title.
                 </p>
+              </div>
+
+              {history && (
+                <RecentDocuments
+                  entries={history.entries}
+                  now={history.now}
+                  activeId={docId}
+                  keepHistory={keepHistory}
+                  offerClear={offerClearHistory}
+                  onKeepHistoryChange={handleKeepHistoryChange}
+                  onOpen={handleOpenHistory}
+                  onDelete={handleDeleteHistory}
+                  onClearAll={handleClearHistory}
+                  onDismissOffer={() => setOfferClearHistory(false)}
+                />
+              )}
+
+              <div className="border-t p-4" style={{ borderColor: 'var(--border)' }}>
+                <div
+                  className="mb-2 flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide"
+                  style={{ color: 'var(--muted-foreground)' }}
+                >
+                  <Keyboard className="h-3.5 w-3.5" />
+                  Shortcuts
+                </div>
+                <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs" style={{ color: 'var(--ink)' }}>
+                  {[
+                    ['E', 'Preview / Source / Split'],
+                    ['O', 'Open file'],
+                    ['S', 'Download .md'],
+                    ['Z', 'Undo replace (outside the editor)'],
+                    ['P', 'Print'],
+                  ].map(([key, label]) => (
+                    <div key={key} className="contents">
+                      <dt>
+                        <kbd className="font-mono" style={{ color: 'var(--muted-foreground)' }}>
+                          {mod}
+                          {key}
+                        </kbd>
+                      </dt>
+                      <dd>{label}</dd>
+                    </div>
+                  ))}
+                </dl>
               </div>
             </div>
           </aside>
         )}
 
-        <section className="min-w-0">
+        <section
+          ref={sectionRef}
+          className={`doc-view doc-view--${mode} min-w-0`}
+          style={{ '--pp-split-zoom': splitZoom } as React.CSSProperties}
+        >
+          {mode !== 'preview' && (
+            <div className="source-pane no-print">
+              <SourceEditor
+                ref={editorRef}
+                value={markdown}
+                onChange={handleEdit}
+                onPasteIntoEmpty={(text) => replaceDocument(text)}
+              />
+            </div>
+          )}
           <div
             className="no-print mb-4 flex items-center justify-between text-xs"
             style={{ color: 'var(--muted-foreground)' }}
@@ -454,16 +734,7 @@ export default function Page() {
             id="print-root"
             className={pasteFlash ? 'paste-flash' : ''}
           >
-            <PrintDocument
-              markdown={markdown}
-              pageSize={pageSize}
-              theme={theme}
-              typography={typography}
-              onMarkdownChange={(md) => {
-                setMarkdown(md)
-                flashPaste()
-              }}
-            />
+            <PrintDocument markdown={preview} pageSize={pageSize} theme={theme} typography={typography} />
           </div>
           <div
             className="no-print mt-6 text-center text-xs italic"
@@ -473,6 +744,32 @@ export default function Page() {
           </div>
         </section>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".md,.markdown,.txt,text/markdown,text/plain"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          e.target.value = ''
+          if (file) void openFile(file)
+        }}
+      />
+      {dragging && (
+        <div
+          className="no-print pointer-events-none fixed inset-3 z-40 flex items-center justify-center rounded-xl border-2 border-dashed"
+          style={{
+            borderColor: 'var(--primary)',
+            background: 'color-mix(in oklch, var(--background) 70%, transparent)',
+          }}
+        >
+          <div className="rounded-lg px-4 py-2 text-sm font-semibold shadow" style={{ background: 'var(--card)', color: 'var(--ink)' }}>
+            Drop a markdown file to open it
+          </div>
+        </div>
+      )}
+      <Toast toast={toast} onAction={undoReplace} onDismiss={dismissToast} />
     </main>
   )
 }
