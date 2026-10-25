@@ -253,7 +253,7 @@ export function PageFurnitureOverlay({
         className="page-furniture__band"
         data-edge={edge}
         style={{
-          [edge]: m.vPx / 2,
+          [edge]: m.edgePx / 2,
           left: m.hPx,
           right: m.hPx,
           opacity: ghost ? 0.45 : 1,

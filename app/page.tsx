@@ -781,8 +781,8 @@ export default function Page() {
             {!marginBoxes
               ? 'Tip: in your print dialog, enable "Headers and footers" if you want page numbers.'
               : hasFurniture(printSettings, docTitle)
-                ? 'Page numbers, header and footer come from the sidebar; the print dialog\'s "Headers and footers" option isn\'t needed. Dashed lines mark approximate page breaks.'
-                : 'Tip: turn on page numbers or a header/footer in the sidebar. Dashed lines mark approximate page breaks.'}
+                ? 'Page numbers, header and footer come from the sidebar; the print dialog\'s "Headers and footers" option isn\'t needed. Keep the dialog\'s Scale at Default so the dashed page-break lines match.'
+                : 'Tip: turn on page numbers or a header/footer in the sidebar. Keep the print dialog\'s Scale at Default so the dashed page-break lines match.'}
           </div>
         </section>
       </div>

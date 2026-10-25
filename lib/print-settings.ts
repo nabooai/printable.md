@@ -45,6 +45,14 @@ export function normalizePrintSettings(v: Partial<PrintSettings> | null | undefi
 
 // Base page margins at a 100% "Page margin" slider. Must match the screen
 // sheet's padding in globals.css (.page-paper / .print-stage .page-paper).
+//
+// Chrome's print dialog overrides @page margins unless "Margins: Default" is
+// picked (and the choice is sticky). So the @page margin is pinned to Chrome's
+// "Minimum" (0.25in) and the rest of each margin is padding on the sheet,
+// repeated on every printed page via box-decoration-break: clone. Default and
+// Minimum then print identically and the Page margin slider always applies.
+// Margin-box furniture lives in that 0.25in edge band.
+const EDGE_IN = 0.25
 const BASE_MARGIN: Record<PageSize, { v: number; h: number; unit: 'in' | 'mm'; pageH: number }> = {
   letter: { v: 0.85, h: 0.95, unit: 'in', pageH: 11 },
   a4: { v: 22, h: 24, unit: 'mm', pageH: 297 },
@@ -56,6 +64,7 @@ export function pageMargins(pageSize: PageSize, scale: number) {
   const b = BASE_MARGIN[pageSize]
   const s = Number.isFinite(scale) && scale > 0 ? scale : 1
   const toPx = b.unit === 'in' ? 96 : 96 / 25.4
+  const edge = b.unit === 'in' ? EDGE_IN : EDGE_IN * 25.4
   return {
     css: `${round(b.v * s)}${b.unit} ${round(b.h * s)}${b.unit}`,
     /** vertical / horizontal margin in CSS px */
@@ -63,6 +72,11 @@ export function pageMargins(pageSize: PageSize, scale: number) {
     hPx: b.h * s * toPx,
     /** printable content height of one page in CSS px */
     contentPx: (b.pageH - 2 * b.v * s) * toPx,
+    /** fixed @page margin (the edge band holding margin-box furniture), in CSS px */
+    edgePx: EDGE_IN * 96,
+    /** print padding on the sheet: the margin minus the edge band */
+    padCss: `${round(b.v * s - edge)}${b.unit} ${round(b.h * s - edge)}${b.unit}`,
+    hPadCss: `${round(b.h * s - edge)}${b.unit}`,
   }
 }
 
@@ -128,8 +142,11 @@ export function buildPageRule(opts: {
 }): string {
   const { pageSize, marginScale, settings, docTitle, marginBoxes } = opts
   const size = pageSize === 'a4' ? 'A4' : 'letter'
-  const { css: margin } = pageMargins(pageSize, marginScale)
-  const lines = [`@page { size: ${size}; margin: ${margin}; }`]
+  const { padCss, hPadCss } = pageMargins(pageSize, marginScale)
+  const lines = [
+    `@page { size: ${size}; margin: ${EDGE_IN}in; }`,
+    `.print-stage .page-paper { padding: ${padCss} !important; box-decoration-break: clone; -webkit-box-decoration-break: clone; }`,
+  ]
 
   const boxes = marginBoxes ? furnitureBoxes(settings, docTitle) : {}
   const used = Object.keys(boxes) as Box[]
@@ -143,7 +160,9 @@ export function buildPageRule(opts: {
     const body = names
       .map((b) => {
         const align = b.endsWith('right') ? 'right' : b.endsWith('center') ? 'center' : 'left'
-        return `@${b} { content: ${all[b]}; ${BOX_STYLE} text-align: ${align}; }`
+        // Inset from the edge band's ends so the text lines up with the text column.
+        const inset = align === 'right' ? `padding-right: ${hPadCss};` : align === 'left' ? `padding-left: ${hPadCss};` : ''
+        return `@${b} { content: ${all[b]}; ${BOX_STYLE} text-align: ${align}; ${inset} }`
       })
       .join(' ')
     lines.push(`@page { ${body} }`)
