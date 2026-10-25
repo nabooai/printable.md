@@ -5,6 +5,7 @@ import { BookMarked } from 'lucide-react'
 import type { PageSize, Theme } from '@/components/print-document'
 import {
   buildPageRule,
+  FURNITURE_CENTER_IN,
   formatPageNumber,
   headerText,
   pageMargins,
@@ -261,7 +262,7 @@ export function PageFurnitureOverlay({
         className="page-furniture__band"
         data-edge={edge}
         style={{
-          [edge]: m.edgePx / 2,
+          [edge]: FURNITURE_CENTER_IN * 96,
           left: m.hPx,
           right: m.hPx,
           opacity: ghost ? 0.45 : 1,

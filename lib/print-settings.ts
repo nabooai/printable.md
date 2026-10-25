@@ -72,9 +72,14 @@ export function normalizePrintSettings(v: unknown): PrintSettings {
 // rest of each margin is padding on the sheet, repeated on every printed page
 // via box-decoration-break: clone — the Page margin slider applies whatever
 // the dialog says. Margin-box furniture lives in the top/bottom edge band,
-// which is 0.5in deep so it stays clear of printers' unprintable border
-// (~4-5mm); a 0.25in band put page numbers where real printers clip them.
+// which is 0.5in deep, and sits on the band's inner side (EDGE_INSET_IN from
+// the content): its centre is ~0.37in (9.4mm) from the paper edge. Laser
+// printers commonly can't print the outer 4-6.35mm; centred in the band
+// (0.25in) the 8.5pt text spanned ~4.9-7.8mm and got clipped.
 const EDGE_V_IN = 0.5
+const EDGE_INSET_IN = 0.06
+/** Distance from the paper edge to the centre of the furniture text, in inches. */
+export const FURNITURE_CENTER_IN = EDGE_V_IN - EDGE_INSET_IN - 0.07
 const EDGE_H_IN = 0.25
 const BASE_MARGIN: Record<PageSize, { v: number; h: number; unit: 'in' | 'mm'; pageH: number }> = {
   letter: { v: 0.85, h: 0.95, unit: 'in', pageH: 11 },
@@ -155,8 +160,15 @@ export function hasFurniture(s: PrintSettings, docTitle: string | null): boolean
 }
 
 const BOX_STYLE =
-  'font-family: var(--pp-run-font, serif); font-size: 8.5pt; color: var(--pp-run-color, #666);' +
+  'font-family: var(--pp-run-font, serif); font-size: 8.5pt; line-height: 1.2; color: var(--pp-run-color, #666);' +
   ' font-style: normal; font-weight: 400; letter-spacing: 0.02em; font-variant-numeric: tabular-nums;'
+
+/** Keep the text on the inner side of the edge band (see EDGE_V_IN). */
+function boxVAlign(b: Box): string {
+  return b.startsWith('top')
+    ? `vertical-align: bottom; padding-bottom: ${EDGE_INSET_IN}in;`
+    : `vertical-align: top; padding-top: ${EDGE_INSET_IN}in;`
+}
 
 /**
  * The full `@media print { @page … }` text: page size, margins scaled by the
@@ -191,7 +203,7 @@ export function buildPageRule(opts: {
         const align = b.endsWith('right') ? 'right' : b.endsWith('center') ? 'center' : 'left'
         // Inset from the edge band's ends so the text lines up with the text column.
         const inset = align === 'right' ? `padding-right: ${hPadCss};` : align === 'left' ? `padding-left: ${hPadCss};` : ''
-        return `@${b} { content: ${all[b]}; ${BOX_STYLE} text-align: ${align}; ${inset} }`
+        return `@${b} { content: ${all[b]}; ${BOX_STYLE} ${boxVAlign(b)} text-align: ${align}; ${inset} }`
       })
       .join(' ')
     lines.push(`@page { ${body} }`)
@@ -240,7 +252,7 @@ export function buildPagedPageRule(opts: {
     const body = used
       .map((b) => {
         const align = b.endsWith('right') ? 'right' : b.endsWith('center') ? 'center' : 'left'
-        return `@${b} { content: ${boxes[b]}; ${BOX_STYLE} text-align: ${align}; }`
+        return `@${b} { content: ${boxes[b]}; ${BOX_STYLE} ${boxVAlign(b)} text-align: ${align}; }`
       })
       .join(' ')
     lines.push(`@page { ${body} }`)
