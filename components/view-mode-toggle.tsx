@@ -1,14 +1,15 @@
 'use client'
 
-import { Columns2, Eye, FileCode } from 'lucide-react'
+import { BookOpenText, Columns2, Eye, FileCode } from 'lucide-react'
 import { onRadioKeyDown } from '@/lib/roving-radio'
 
-export type ViewMode = 'preview' | 'source' | 'split'
+export type ViewMode = 'preview' | 'pages' | 'source' | 'split'
 
 const MODES: { id: ViewMode; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { id: 'preview', label: 'Preview', icon: Eye },
   { id: 'source', label: 'Source', icon: FileCode },
   { id: 'split', label: 'Split', icon: Columns2 },
+  { id: 'pages', label: 'Pages', icon: BookOpenText },
 ]
 
 export function ViewModeToggle({

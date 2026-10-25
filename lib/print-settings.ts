@@ -9,13 +9,16 @@
 //  - Chrome hides its own "Headers and footers" on an edge as soon as a margin
 //    box on that edge has content — even `content: ""`. `content: none` does
 //    NOT count, so empty boxes use "" to keep the browser's defaults away.
-//  - string-set / running() are unsupported, so header text is a literal.
+//  - string-set / running() are unsupported natively, so in native print the
+//    header text is a literal. The Pages view (Paged.js, see lib/paged/)
+//    paginates itself and does support string-set: buildPagedPageRule() adds
+//    the "Current section" running header there.
 import type { PageSize } from '@/components/print-document'
 import { bool, isRecord, oneOf, str } from '@/lib/settings'
 
 export type PageNumberPosition = 'bottom-center' | 'bottom-right' | 'top-right'
 export type PageNumberFormat = 'n' | 'n-of-total' | 'page-n-of-total'
-export type HeaderMode = 'off' | 'title' | 'custom'
+export type HeaderMode = 'off' | 'title' | 'section' | 'custom'
 
 export interface PrintSettings {
   pageNumbers: boolean
@@ -41,7 +44,7 @@ export const PRINT_STORAGE_KEY = 'pp:print'
 
 const POSITIONS = ['bottom-center', 'bottom-right', 'top-right'] as const satisfies readonly PageNumberPosition[]
 const FORMATS = ['n', 'n-of-total', 'page-n-of-total'] as const satisfies readonly PageNumberFormat[]
-const HEADER_MODES = ['off', 'title', 'custom'] as const satisfies readonly HeaderMode[]
+const HEADER_MODES = ['off', 'title', 'section', 'custom'] as const satisfies readonly HeaderMode[]
 
 /**
  * Validate a stored (possibly old, partial or corrupt) value field by field;
@@ -109,8 +112,13 @@ export function cssString(text: string): string {
   return `"${clean}"`
 }
 
+/**
+ * Literal header text. "Current section" can only be resolved per page by the
+ * Pages view; everywhere else (native print, the sheet preview) it falls back
+ * to the document title.
+ */
 export function headerText(s: PrintSettings, docTitle: string | null): string {
-  if (s.header === 'title') return (docTitle ?? '').trim()
+  if (s.header === 'title' || s.header === 'section') return (docTitle ?? '').trim()
   if (s.header === 'custom') return s.headerText.trim()
   return ''
 }
@@ -129,6 +137,7 @@ function pageNumberContent(fmt: PageNumberFormat): string {
 }
 
 type Box = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right'
+const BOXES: readonly Box[] = ['top-left', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right']
 
 /** Which margin box shows what. Header → top-left, footer text → bottom-left. */
 export function furnitureBoxes(s: PrintSettings, docTitle: string | null): Partial<Record<Box, string>> {
@@ -191,4 +200,53 @@ export function buildPageRule(opts: {
     }
   }
   return `@media print {\n  ${lines.join('\n  ')}\n}`
+}
+
+/** Named string the Pages view sets from each top-level H2 (CSS string-set). */
+export const SECTION_STRING = 'pp-section'
+
+/**
+ * @page CSS for the Pages view (Paged.js). Unlike native print there is no
+ * fixed edge band + padding trick: Paged.js lays out real page boxes, and the
+ * printed @page becomes `margin: 0` with one page box per sheet, so the full
+ * margin is a true @page margin here. Margin-box text sits in the outer 0.5in
+ * of the margin, like native print (see pagedFurnitureCss in lib/paged).
+ *
+ * Selectors for string-set are scoped like the rest of the paginated copy.
+ */
+export function buildPagedPageRule(opts: {
+  pageSize: PageSize
+  marginScale: number
+  settings: PrintSettings
+  docTitle: string | null
+  scope: string
+}): string {
+  const { pageSize, marginScale, settings, docTitle, scope } = opts
+  const size = pageSize === 'a4' ? 'A4' : 'letter'
+  const { css: margin } = pageMargins(pageSize, marginScale)
+  const boxes = furnitureBoxes(settings, docTitle)
+  const lines = [`@page { size: ${size}; margin: ${margin}; }`]
+  if (settings.header === 'section') {
+    // The document title seeds the string, then every top-level H2 replaces
+    // it. string() without a keyword is `first`: the first heading that
+    // starts on the page, else the one carried over from earlier pages.
+    lines.push(
+      `${scope} .doc-title, ${scope} .prose-print > h2 { string-set: ${SECTION_STRING} content(text); }`,
+    )
+    boxes['top-left'] = `string(${SECTION_STRING})`
+  }
+  const used = BOXES.filter((b) => boxes[b])
+  if (used.length > 0) {
+    const body = used
+      .map((b) => {
+        const align = b.endsWith('right') ? 'right' : b.endsWith('center') ? 'center' : 'left'
+        return `@${b} { content: ${boxes[b]}; ${BOX_STYLE} text-align: ${align}; }`
+      })
+      .join(' ')
+    lines.push(`@page { ${body} }`)
+    if (settings.skipFirstPage) {
+      lines.push(`@page :first { ${used.map((b) => `@${b} { content: none; }`).join(' ')} }`)
+    }
+  }
+  return lines.join('\n')
 }

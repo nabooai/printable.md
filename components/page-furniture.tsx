@@ -152,9 +152,16 @@ export function PageFurnitureSection({
             >
               <option value="off">Off</option>
               <option value="title">Document title</option>
+              <option value="section">Current section (H2)</option>
               <option value="custom">Custom text</option>
             </select>
           </label>
+          {settings.header === 'section' && (
+            <p className="leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+              Each page shows the section it&rsquo;s in. Needs the Pages view: printing from Preview shows the
+              document title instead.
+            </p>
+          )}
           {settings.header === 'custom' && (
             <input
               type="text"

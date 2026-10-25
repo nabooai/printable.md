@@ -30,6 +30,7 @@ import { SourceEditor } from '@/components/source-editor'
 import { Toast, type ToastData } from '@/components/toast'
 import { ViewModeToggle, type ViewMode } from '@/components/view-mode-toggle'
 import { RecentDocuments } from '@/components/recent-documents'
+import { PagesView, type PagesViewHandle } from '@/components/pages-view'
 import {
   clearHistory,
   deleteHistory,
@@ -155,11 +156,12 @@ export default function Page() {
     // user arrows through it.
     const active = document.activeElement
     if (active?.getAttribute('role') === 'radio' && active.matches(':focus-visible')) return
-    if (mode !== 'preview') editorRef.current?.focus()
+    if (mode === 'source' || mode === 'split') editorRef.current?.focus()
   }, [mode])
 
   const cycleMode = () => {
-    const order: ViewMode[] = wide ? ['preview', 'source', 'split'] : ['preview', 'source']
+    // Same order as the toggle's buttons.
+    const order: ViewMode[] = wide ? ['preview', 'source', 'split', 'pages'] : ['preview', 'source', 'pages']
     setViewMode(order[(order.indexOf(mode) + 1) % order.length])
   }
 
@@ -267,7 +269,7 @@ export default function Page() {
       flashPaste()
       saveToHistory(next, id, opts.theme, opts.pageSize)
     } else {
-      if (mode === 'preview') setViewMode('source')
+      if (mode === 'preview' || mode === 'pages') setViewMode('source')
       requestAnimationFrame(() => editorRef.current?.focus())
     }
   }
@@ -351,6 +353,11 @@ export default function Page() {
       if (markdown.trim()) handleDownloadMd()
     },
     z: (e) => !isTextField(e.target) && undoReplace(),
+    // In Pages view, wait for an up-to-date pagination before printing.
+    p: () => {
+      if (mode !== 'pages') return false
+      void handlePrint()
+    },
   })
 
   // Global paste — anywhere in the window. We avoid stealing paste from real
@@ -393,7 +400,18 @@ export default function Page() {
     marginBoxes,
   })
 
-  const handlePrint = () => window.print()
+  // Pages view: print once the pagination matches the document (it then prints
+  // exactly those pages; if pagination failed it falls back to native print).
+  const pagesRef = useRef<PagesViewHandle>(null)
+  const printRootRef = useRef<HTMLDivElement>(null)
+  const handlePrint = async () => {
+    if (mode === 'pages' && pagesRef.current) {
+      if (previewTimer.current) clearTimeout(previewTimer.current)
+      flushSync(() => setPreview(markdown))
+      await pagesRef.current.ready()
+    }
+    window.print()
+  }
 
   const handlePasteFromClipboard = async () => {
     try {
@@ -808,7 +826,7 @@ export default function Page() {
                 </h2>
                 <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs" style={{ color: 'var(--ink)' }}>
                   {[
-                    ['E', 'Preview / Source / Split'],
+                    ['E', 'Preview / Source / Split / Pages'],
                     ['O', 'Open file'],
                     ['S', 'Download .md'],
                     ['Z', 'Undo replace (outside the editor)'],
@@ -839,7 +857,7 @@ export default function Page() {
           className={`doc-view doc-view--${mode} min-w-0`}
           style={{ '--pp-split-zoom': splitZoom } as React.CSSProperties}
         >
-          {mode !== 'preview' && (
+          {(mode === 'source' || mode === 'split') && (
             <div className="source-pane no-print">
               <SourceEditor
                 ref={editorRef}
@@ -858,7 +876,19 @@ export default function Page() {
             </span>
             <span>{pageSize === 'letter' ? '8.5 × 11 in' : '210 × 297 mm'}</span>
           </div>
+          {mode === 'pages' && (
+            <PagesView
+              ref={pagesRef}
+              printRoot={printRootRef}
+              pageSize={pageSize}
+              marginScale={typography.pageMargin}
+              settings={printSettings}
+              docTitle={docTitle}
+              isEmpty={preview.trim().length === 0}
+            />
+          )}
           <div
+            ref={printRootRef}
             id="print-root"
             className={pasteFlash ? 'paste-flash' : ''}
           >
@@ -884,11 +914,13 @@ export default function Page() {
             className="no-print mt-6 text-center text-xs italic"
             style={{ color: 'var(--muted-foreground)' }}
           >
-            {!marginBoxes
-              ? 'Tip: in your print dialog, enable "Headers and footers" if you want page numbers.'
-              : hasFurniture(printSettings, docTitle)
-                ? 'Page numbers, header and footer come from the sidebar; the print dialog\'s "Headers and footers" option isn\'t needed. Keep the dialog\'s Scale at Default so the dashed page-break lines match.'
-                : 'Tip: turn on page numbers or a header/footer in the sidebar. Keep the print dialog\'s Scale at Default so the dashed page-break lines match.'}
+            {mode === 'pages'
+              ? 'Printing from Pages prints exactly these pages. In the print dialog keep Margins at Default (or None) and Scale at Default.'
+              : !marginBoxes
+                ? 'Tip: in your print dialog, enable "Headers and footers" if you want page numbers.'
+                : hasFurniture(printSettings, docTitle)
+                  ? 'Page numbers, header and footer come from the sidebar; the print dialog\'s "Headers and footers" option isn\'t needed. Dashed lines are approximate page breaks — open Pages to see the exact pages.'
+                  : 'Tip: turn on page numbers or a header/footer in the sidebar. Dashed lines are approximate page breaks — open Pages to see the exact pages.'}
           </div>
         </main>
       </div>

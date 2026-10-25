@@ -2018,6 +2018,157 @@
 }
 
 /* ===========================================================
+   Pages view (components/pages-view.tsx): the document paginated by
+   Paged.js into real page boxes. When it is current, printing prints these
+   boxes (html[data-pp-print="pages"]); otherwise the normal sheet prints.
+   =========================================================== */
+@media screen {
+  .doc-view--pages #print-root {
+    display: none;
+  }
+}
+.pages-view {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--workbench);
+  border-radius: 8px;
+  padding: 0 0 2.5rem;
+  overflow-x: clip;
+}
+.pages-view__status {
+  position: sticky;
+  top: 69px;
+  z-index: 2;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0.4rem 1rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  background: color-mix(in oklch, var(--workbench) 90%, transparent);
+  backdrop-filter: blur(6px);
+  border-radius: 8px 8px 0 0;
+  text-align: center;
+}
+.pages-view__frame {
+  position: relative;
+  margin-top: 0.75rem;
+}
+.pp-pages-scaler {
+  transform: scale(var(--pp-pages-scale, 1));
+  transform-origin: top left;
+}
+.pp-pages-host {
+  transition: opacity 0.2s;
+}
+.pages-view[data-busy] .pp-pages-host {
+  opacity: 0.55;
+}
+/* Paged.js lays out here: unscaled, invisible, out of flow. */
+.pp-pages-staging {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: max-content;
+  visibility: hidden;
+  pointer-events: none;
+  z-index: -1;
+}
+@media screen {
+  .pages-view .pagedjs_pages {
+    display: flex;
+    flex-direction: column;
+    gap: calc(30px / var(--pp-pages-scale, 1));
+  }
+  .pages-view .pagedjs_page {
+    position: relative;
+    background: white;
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.06),
+      0 6px 18px rgba(0, 0, 0, 0.08);
+  }
+  /* Page number under each page. */
+  .pages-view .pagedjs_page::after {
+    content: attr(data-page-number);
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    padding-top: calc(7px / var(--pp-pages-scale, 1));
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: calc(11px / var(--pp-pages-scale, 1));
+    line-height: 1;
+    color: var(--muted-foreground);
+  }
+}
+/* Margin-box furniture sits in the outer 0.5in of the page margin, like the
+   native print path's fixed edge band (lib/print-settings.ts), however wide
+   the margin is. */
+.pages-view .pagedjs_margin-top {
+  height: 0.5in;
+  align-self: start;
+}
+.pages-view .pagedjs_margin-bottom {
+  height: 0.5in;
+  align-self: end;
+}
+/* Paged.js justifies the last line of the deepest element split across a
+   page break (so a justified paragraph's first half ends flush). When rows or
+   items move whole to the next page, that "element" is a tbody / list / div
+   and every cell or item inside inherited text-align-last: justify. Keep it
+   only on elements that hold the split text themselves. */
+.pages-view
+  :is(table, thead, tbody, tfoot, tr, ul, ol, dl, div, section, article, figure, details, blockquote)[data-align-last-split-element] {
+  text-align-last: auto;
+}
+.pages-view .pagedjs_margin-content {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media print {
+  html[data-pp-print='pages'] #print-root {
+    display: none !important;
+  }
+  html:not([data-pp-print='pages']) .pages-view {
+    display: none !important;
+  }
+  .pages-view {
+    display: block;
+    padding: 0 !important;
+    background: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+  .pages-view__frame {
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+  }
+  .pp-pages-scaler {
+    transform: none !important;
+    width: auto !important;
+  }
+  .pp-pages-host {
+    opacity: 1 !important;
+  }
+  .pp-pages-staging {
+    display: none !important;
+  }
+  /* Paged.js gives every page break-after: page; on the last one that
+     produced a trailing blank sheet. */
+  .pages-view .pagedjs_page:last-child {
+    break-after: auto !important;
+  }
+}
+
+/* ===========================================================
    Accessibility & UX polish (Track F) — app chrome only, screen only.
    Focus rings, skip link, reduced motion, placeholder contrast,
    narrow-screen overflow. Keep this block last: unlayered rules here
