@@ -32,14 +32,15 @@ if (hashes.size === 0) throw new Error('write-headers: no inline scripts found i
 
 const csp = [
   "default-src 'self'",
-  `script-src 'self' ${[...hashes].sort().join(' ')}`,
+  // Cloudflare Web Analytics (injected by Pages on the production domain).
+  `script-src 'self' ${[...hashes].sort().join(' ')} https://static.cloudflareinsights.com`,
   // React style={{...}} props and next/font need inline styles.
   "style-src 'self' 'unsafe-inline'",
   // https: so documents can show remote images (the app gates them behind a
   // click; CSP itself can't express "only after a click").
   "img-src 'self' data: blob: https:",
   "font-src 'self'",
-  "connect-src 'self'",
+  "connect-src 'self' https://cloudflareinsights.com",
   "media-src 'none'",
   "object-src 'none'",
   "frame-src 'none'",
