@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useEffectEvent, useImperativeHandle, useRef, useState, type Ref } from 'react'
+import { flushSync } from 'react-dom'
 import { Loader2 } from 'lucide-react'
 import type { PageSize } from '@/components/print-document'
 import { buildPagedPageRule, pageMargins, type PrintSettings } from '@/lib/print-settings'
@@ -25,7 +26,7 @@ export interface PagesViewHandle {
 type Status =
   | { kind: 'loading' }
   | { kind: 'paginating'; pages: number }
-  | { kind: 'ready'; pages: number; ms: number }
+  | { kind: 'ready'; pages: number; ms: number; overflow: number[] }
   | { kind: 'too-big' }
   | { kind: 'error'; message: string }
 
@@ -65,13 +66,14 @@ export function PagesView({
   isEmpty: boolean
 }) {
   const viewRef = useRef<HTMLDivElement>(null)
-  const scalerRef = useRef<HTMLDivElement>(null)
-  // Both imperatively managed: React renders them empty and never touches
-  // their children. Paged.js lays out into the unscaled, invisible staging
-  // host (its measurements must not see the display transform); finished
-  // pages move into the live host, which is scaled to fit the column.
+  // Imperatively managed: React renders it empty and never touches its
+  // children. It holds up to two absolutely positioned buffers: the live one
+  // (scaled with transform to fit the column) and, while re-paginating, a
+  // staging one that Paged.js lays out unscaled and invisible (its
+  // measurements must not see the transform). Swapping is an attribute flip,
+  // not a DOM move, so the finished pages are never laid out twice.
   const hostRef = useRef<HTMLDivElement>(null)
-  const stagingRef = useRef<HTMLDivElement>(null)
+  const liveObserver = useRef<ResizeObserver | null>(null)
   const [status, setStatus] = useState<Status>({ kind: 'loading' })
   const [scale, setScale] = useState(1)
   const [contentH, setContentH] = useState(0)
@@ -113,14 +115,13 @@ export function PagesView({
     c.timer = null
     const source = printRoot.current?.querySelector('.print-stage')
     const host = hostRef.current
-    const staging = stagingRef.current
-    if (!source || !host || !staging) return
+    if (!source || !host) return
     if (isEmpty) {
       c.live?.destroy()
       c.live = null
       c.stale = false
       setPrintTarget('native', null)
-      setStatus({ kind: 'ready', pages: 0, ms: 0 })
+      setStatus({ kind: 'ready', pages: 0, ms: 0, overflow: [] })
       settle(false)
       return
     }
@@ -130,7 +131,7 @@ export function PagesView({
     try {
       const result = await paginate({
         source,
-        host: staging,
+        host,
         pageCss: buildPagedPageRule({ pageSize, marginScale, settings, docTitle, scope: `.${SCOPE_CLASS}` }),
         contentWidth: PAGE_WIDTH_PX[pageSize] - 2 * pageMargins(pageSize, marginScale).hPx,
         signal: abort.signal,
@@ -144,13 +145,16 @@ export function PagesView({
       // Swap buffers, keeping the page at the top of the viewport in place.
       const anchor = pageAtTop(c.live?.root)
       c.live?.destroy()
-      host.appendChild(result.root)
       result.root.dataset.live = ''
       c.live = result
+      liveObserver.current?.disconnect()
+      liveObserver.current = new ResizeObserver(() => setContentH(result.root.offsetHeight))
+      liveObserver.current.observe(result.root)
+      flushSync(() => setContentH(result.root.offsetHeight))
       c.abort = null
       c.stale = false
       setPrintTarget('pages', result)
-      setStatus({ kind: 'ready', pages: result.pages, ms: Math.round(result.ms) })
+      setStatus({ kind: 'ready', pages: result.pages, ms: Math.round(result.ms), overflow: result.overflowPages })
       if (anchor) restoreAnchor(result.root, anchor)
       settle(true)
     } catch (e) {
@@ -175,6 +179,8 @@ export function PagesView({
     // Until the new pagination lands, a print uses the browser's layout of the
     // current document rather than outdated pages.
     setPrintTarget('native', c.live)
+    // Dim the outdated pages right away, not only once the debounce ends.
+    setStatus({ kind: 'paginating', pages: 0 })
     c.abort?.abort()
     c.abort = null
     if (c.timer) clearTimeout(c.timer)
@@ -195,19 +201,13 @@ export function PagesView({
       if (relevant) schedule(DEBOUNCE_MS)
     })
     if (root) mo.observe(root, { subtree: true, childList: true, characterData: true, attributes: true })
-    // Re-paginate when web fonts finish loading (metrics change).
-    const onFonts = () => schedule(DEBOUNCE_MS)
-    document.fonts?.addEventListener('loadingdone', onFonts)
-    const ro = new ResizeObserver(() => {
-      fit()
-      setContentH(scalerRef.current?.offsetHeight ?? 0)
-    })
+    // (No re-run on web-font loads: Paged.js loads every font before layout.)
+    const ro = new ResizeObserver(() => fit())
     if (viewRef.current) ro.observe(viewRef.current)
-    if (scalerRef.current) ro.observe(scalerRef.current)
     return () => {
       mo.disconnect()
       ro.disconnect()
-      document.fonts?.removeEventListener('loadingdone', onFonts)
+      liveObserver.current?.disconnect()
       if (c.timer) clearTimeout(c.timer)
       c.timer = null
       c.abort?.abort()
@@ -259,6 +259,7 @@ export function PagesView({
       data-busy={busy ? '' : undefined}
       data-pages={status.kind === 'ready' ? status.pages : undefined}
       data-ms={status.kind === 'ready' ? status.ms : undefined}
+      data-overflow={status.kind === 'ready' ? status.overflow.join(' ') : undefined}
     >
       <div className="pages-view__status no-print" role="status" aria-live="polite">
         {status.kind === 'loading' && (
@@ -291,14 +292,11 @@ export function PagesView({
         )}
       </div>
       <div
+        ref={hostRef}
         className="pages-view__frame"
+        onClick={onClick}
         style={{ width: pageW * scale, height: contentH * scale, '--pp-pages-scale': scale } as React.CSSProperties}
-      >
-        <div ref={scalerRef} className="pp-pages-scaler" style={{ width: pageW }}>
-          <div ref={hostRef} className="pp-pages-host" onClick={onClick} />
-        </div>
-      </div>
-      <div ref={stagingRef} className="pp-pages-staging" aria-hidden="true" />
+      />
     </div>
   )
 }

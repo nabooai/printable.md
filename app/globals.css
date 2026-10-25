@@ -2035,7 +2035,9 @@
   background: var(--workbench);
   border-radius: 8px;
   padding: 0 0 2.5rem;
-  overflow-x: clip;
+  /* The unscaled staging buffer is wider/taller than the scaled frame; clip
+     (unlike hidden) keeps the sticky status bar working. */
+  overflow: clip;
 }
 .pages-view__status {
   position: sticky;
@@ -2059,25 +2061,27 @@
   position: relative;
   margin-top: 0.75rem;
 }
-.pp-pages-scaler {
-  transform: scale(var(--pp-pages-scale, 1));
-  transform-origin: top left;
-}
-.pp-pages-host {
-  transition: opacity 0.2s;
-}
-.pages-view[data-busy] .pp-pages-host {
-  opacity: 0.55;
-}
-/* Paged.js lays out here: unscaled, invisible, out of flow. */
-.pp-pages-staging {
+/* Both buffers sit at the frame's origin. The live one is scaled to fit the
+   column; a staging one (re-pagination in progress) is laid out by Paged.js
+   unscaled and invisible. Swapping only flips data-live: no relayout. */
+.pp-pages-buffer {
   position: absolute;
   left: 0;
   top: 0;
   width: max-content;
+  transform-origin: top left;
+}
+.pp-pages-buffer[data-live] {
+  transform: scale(var(--pp-pages-scale, 1));
+  transition: opacity 0.2s;
+}
+.pp-pages-buffer:not([data-live]) {
   visibility: hidden;
   pointer-events: none;
   z-index: -1;
+}
+.pages-view[data-busy] .pp-pages-buffer[data-live] {
+  opacity: 0.55;
 }
 @media screen {
   .pages-view .pagedjs_pages {
@@ -2109,7 +2113,8 @@
 }
 /* Margin-box furniture sits in the outer 0.5in of the page margin, like the
    native print path's fixed edge band (lib/print-settings.ts), however wide
-   the margin is. */
+   the margin is; the boxes' own vertical-align/padding keep the text on the
+   band's inner side, clear of printers' unprintable border. */
 .pages-view .pagedjs_margin-top {
   height: 0.5in;
   align-self: start;
@@ -2151,14 +2156,13 @@
     height: auto !important;
     margin: 0 !important;
   }
-  .pp-pages-scaler {
+  .pp-pages-buffer[data-live] {
+    position: static !important;
     transform: none !important;
     width: auto !important;
-  }
-  .pp-pages-host {
     opacity: 1 !important;
   }
-  .pp-pages-staging {
+  .pp-pages-buffer:not([data-live]) {
     display: none !important;
   }
   /* Paged.js gives every page break-after: page; on the last one that

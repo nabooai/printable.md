@@ -13,6 +13,8 @@ declare module 'pagedjs' {
     hooks: ChunkerHooks
     pages: unknown[]
     total: number
+    /** The parsed content being paginated (set once flow() starts). */
+    source: unknown
     destroy(): void
     stop(): void
   }
